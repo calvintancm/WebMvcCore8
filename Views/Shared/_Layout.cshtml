@@ -1,50 +1,827 @@
-﻿<!DOCTYPE html>
+@* ═══════════════════════════════════════════════════════
+   _Layout.cshtml  — PTC IGH System Master Layout
+   Composed of: _Navigation, _Header, _Flash, _Footer
+   Libs: Bootstrap 5 CDN | Kendo 2018.2.516 (local) | SweetAlert2 CDN
+═══════════════════════════════════════════════════════ *@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ptc_IGH_Sys</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <title>@ViewData["Title"] — PTC IGH System</title>
+
+    @* ── Google Fonts ── *@
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    @* ── Bootstrap 5 ── *@
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" />
+
+    @* ── Bootstrap Icons ── *@
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" />
+
+    @* ── Kendo UI 2018.2.516 — LOCAL wwwroot/lib/kendo ── *@
+    <link rel="stylesheet" href="~/lib/kendo/2018.2.516/styles/kendo.common.min.css" />
+    <link rel="stylesheet" href="~/lib/kendo/2018.2.516/styles/kendo.default.min.css" />
+
+    @* ── SweetAlert2 ── *@
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.1/sweetalert2.min.css" />
+
+    @* ── Site-wide CSS variables & shared styles ── *@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/ptc_IGH_Sys.styles.css" asp-append-version="true" />
+
+    <style>
+        /* ══════════════════════════════════════════
+           GLOBAL CSS VARIABLES
+        ══════════════════════════════════════════ */
+        :root {
+            /* Layout dimensions */
+            --sidebar-w:           265px;
+            --sidebar-w-collapsed: 66px;
+            --topbar-h:            58px;
+            --footer-h:            46px;
+
+            /* ── Sidebar — LIGHTER steel-blue palette ── */
+            --sb-bg:            #2c4a6e;   /* medium-light navy blue  */
+            --sb-bg-deep:       #243d5e;   /* slightly deeper for sub */
+            --sb-bg-top:        #1f3652;   /* brand bar top           */
+            --sb-hover:         #3a5f8a;   /* hover state             */
+            --sb-active-bg:     rgba(255,255,255,0.14);
+            --sb-active-line:   #7ec8f0;   /* bright sky-blue accent  */
+            --sb-border:        rgba(255,255,255,0.1);
+            
+           /*  --sb-text:          #c8ddf0;   
+            --sb-text-active:   #ffffff;
+            --sb-text-header:   #7aadd4;    */
+
+            /* cmtan AFTER — brighter white, easier to read */
+            --sb-text: #ffffff; /* ← change this for normal menu item color */
+            --sb-text-active: #c8ddf0; /* ← active/selected item color */
+            --sb-text-header: #90c4e8; /* ← section title color e.g. "MAIN", "DELIVERY" */
+
+
+            /* Top bar */
+            --topbar-bg:        #ffffff;
+            --topbar-border:    #e2e8f0;
+            --topbar-shadow:    0 1px 6px rgba(0,0,0,0.07);
+
+            /* Content */
+            --content-bg:       #f0f4f9;
+            --card-bg:          #ffffff;
+            --card-shadow:      0 2px 14px rgba(0,0,0,0.055);
+            --card-radius:      12px;
+
+            /* Accent colours */
+            --accent:           #1a6eb5;
+            --accent-lt:        #3b96e8;
+            --gold:             #d97706;
+            --gold-lt:          #fbbf24;
+
+            /* Text */
+            --text-primary:     #1e293b;
+            --text-secondary:   #475569;
+            --text-muted:       #94a3b8;
+
+            /* Status */
+            --clr-success:      #059669;
+            --clr-warning:      #d97706;
+            --clr-danger:       #dc2626;
+            --clr-info:         #0891b2;
+
+            /* Footer */
+            --footer-bg:        #ffffff;
+            --footer-border:    #e2e8f0;
+
+            --radius-sm:        8px;
+            --radius:           12px;
+            --radius-lg:        16px;
+            --transition:       0.22s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        /* ── Base ─────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--content-bg);
+            overflow-x: hidden;
+        }
+
+        /* ── Main wrapper ────────────────────── */
+        #main-wrapper {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left var(--transition);
+        }
+
+        body.sidebar-collapsed #main-wrapper {
+            margin-left: var(--sidebar-w-collapsed);
+        }
+
+        /* ── Content area ─────────────────────── */
+        #content-area {
+            flex: 1;
+            padding: 24px 24px 0;
+            animation: fade-in 0.3s ease;
+        }
+
+        @@keyframes fade-in {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Shared card ──────────────────────── */
+        .ptc-card {
+            background: var(--card-bg);
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+
+        .ptc-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .ptc-card-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ptc-card-title i { color: var(--accent-lt); }
+        .ptc-card-body    { padding: 20px; }
+
+        /* ── Stat cards ───────────────────────── */
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--card-radius);
+            padding: 20px 22px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(0,0,0,0.04);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.09);
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 3px;
+        }
+
+        .stat-card.blue::after   { background: linear-gradient(90deg,#1a6eb5,#3b96e8); }
+        .stat-card.green::after  { background: linear-gradient(90deg,#059669,#34d399); }
+        .stat-card.orange::after { background: linear-gradient(90deg,#d97706,#fbbf24); }
+        .stat-card.red::after    { background: linear-gradient(90deg,#dc2626,#f87171); }
+
+        .stat-icon {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; flex-shrink: 0;
+        }
+
+        .stat-icon.blue   { background: rgba(26,110,181,0.1);  color: var(--accent-lt); }
+        .stat-icon.green  { background: rgba(5,150,105,0.1);   color: #10b981; }
+        .stat-icon.orange { background: rgba(217,119,6,0.1);   color: var(--gold); }
+        .stat-icon.red    { background: rgba(220,38,38,0.1);   color: #ef4444; }
+
+        .stat-value {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.6rem; font-weight: 700;
+            color: var(--text-primary); line-height: 1; margin-bottom: 4px;
+        }
+
+        .stat-label { font-size: 0.78rem; color: var(--text-muted); }
+
+        .stat-trend {
+            font-size: 0.72rem; font-weight: 600;
+            display: flex; align-items: center; gap: 3px; margin-top: 5px;
+        }
+
+        .stat-trend.up   { color: #10b981; }
+        .stat-trend.down { color: #ef4444; }
+
+        .stat-bg-icon {
+            position: absolute; right: 16px;
+            top: 50%; transform: translateY(-50%);
+            font-size: 64px; opacity: 0.05;
+        }
+
+        /* ── Buttons ──────────────────────────── */
+        .btn-ptc-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-lt));
+            color: #fff; border: none;
+            padding: 8px 18px; border-radius: var(--radius-sm);
+            font-size: 0.82rem; font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: transform 0.18s, box-shadow 0.18s;
+            display: inline-flex; align-items: center; gap: 7px;
+            text-decoration: none;
+        }
+
+        .btn-ptc-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(26,110,181,0.35);
+            color: #fff;
+        }
+
+        .btn-ptc-outline {
+            background: transparent; color: var(--accent-lt);
+            border: 1px solid var(--accent-lt);
+            padding: 8px 18px; border-radius: var(--radius-sm);
+            font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: all 0.18s;
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+
+        .btn-ptc-outline:hover { background: var(--accent-lt); color: #fff; }
+
+        /* ── Page header ──────────────────────── */
+        .page-header {
+            display: flex; align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 22px; gap: 16px; flex-wrap: wrap;
+        }
+
+        .page-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.3rem; font-weight: 700;
+            color: var(--text-primary); margin: 0 0 4px;
+        }
+
+        .page-subtitle { font-size: 0.82rem; color: var(--text-muted); margin: 0; }
+
+        /* ── Online dot ───────────────────────── */
+        .online-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #10b981; display: inline-block;
+            margin-right: 5px; animation: pulse-dot 2s infinite;
+        }
+
+        @@keyframes pulse-dot {
+            0%,100% { opacity:1; } 50% { opacity:0.35; }
+        }
+
+        /* ── Kendo overrides ──────────────────── */
+        .k-grid th {
+            background: #f8fafc !important;
+            font-weight: 600 !important;
+            font-size: 0.77rem !important;
+            color: var(--text-secondary) !important;
+        }
+
+        .k-grid td       { font-size: 0.82rem; }
+        .k-grid tr:hover td { background: #f0f7ff !important; }
+
+        /* ── SweetAlert2 overrides ────────────── */
+        .swal2-popup  { border-radius: var(--radius-lg) !important; font-family: 'DM Sans',sans-serif !important; }
+        .swal2-title  { font-family: 'Sora',sans-serif !important; font-size: 1.3rem !important; }
+        .swal2-confirm { border-radius: var(--radius-sm) !important; }
+
+        /* ── Mobile overlay ───────────────────── */
+        #sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 1039;
+            backdrop-filter: blur(2px);
+        }
+
+      
+
+        @@media (max-width: 768px) {
+            #sidebar {
+            width: var(--sidebar-w) !important;
+            transform: translateX(-100%);
+            transition: transform var(--transition);
+            z-index: 1050;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+            }
+
+            body.mobile-open #sidebar {
+                transform: translateX(0);
+            }
+
+            /* Ensure all text visible when open on mobile */
+            body.mobile-open .sb-brand-text,
+            body.mobile-open .sb-profile-info,
+            body.mobile-open .sb-nav-label,
+            body.mobile-open .sb-badge,
+            body.mobile-open .sb-chevron,
+            body.mobile-open .sb-section-title {
+                opacity: 1 !important;
+                width: auto !important;
+                overflow: visible !important;
+            }
+
+        }
+
+        /* ════════════════════════════════════════════
+           RESPONSIVE BREAKPOINTS
+        ════════════════════════════════════════════ */
+
+        /* ── Tablet (768px - 1024px) ────────────── */
+        @@media (max-width: 1024px) {
+            : root
+
+        {
+            --sidebar-w: 240px;
+        }
+
+        #content-area {
+            padding: 18px 18px 0;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+        }
+
+        }
+
+        /* ── Mobile landscape / small tablet (576px - 768px) ── */
+        @@media (max-width: 768px) {
+            #sidebar
+
+        {
+            transform: translateX(-100%);
+            width: var(--sidebar-w) !important;
+        }
+
+        body.mobile-open #sidebar {
+            transform: translateX(0);
+        }
+
+        body.mobile-open #sidebar-overlay {
+            display: block;
+        }
+
+        #main-wrapper {
+            margin-left: 0 !important;
+        }
+
+        #content-area {
+            padding: 16px 14px 0;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+            .page-header > div:last-child {
+                width: 100%;
+            }
+
+                .page-header > div:last-child .btn-ptc-primary,
+                .page-header > div:last-child .btn-ptc-outline {
+                    flex: 1;
+                    justify-content: center;
+                }
+
+        .page-title {
+            font-size: 1.15rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.78rem;
+        }
+
+        /* Stat cards — 2 per row on tablet */
+        .stat-card {
+            padding: 16px;
+        }
+
+        .stat-value {
+            font-size: 1.35rem;
+        }
+
+        .stat-bg-icon {
+            display: none;
+        }
+
+        }
+
+        /* ── Mobile portrait (max 576px) ─────────── */
+        @@media (max-width: 576px) {
+            #content-area
+
+        {
+            padding: 12px 10px 0;
+        }
+
+        .page-title {
+            font-size: 1.05rem;
+        }
+
+        /* Stat cards — 1 per row on phone */
+        .stat-card {
+            padding: 14px 16px;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+        }
+
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            font-size: 18px;
+        }
+
+        /* Cards */
+        .ptc-card-header {
+            padding: 12px 14px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .ptc-card-body {
+            padding: 14px;
+        }
+
+        /* Buttons */
+        .btn-ptc-primary,
+        .btn-ptc-outline {
+            padding: 7px 14px;
+            font-size: 0.8rem;
+        }
+
+        }
+
+        /* ── SweetAlert2 — always true viewport center ── */
+        .swal2-container {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 99999 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            padding: 16px !important;
+        }
+
+        .swal2-popup {
+            border-radius: var(--radius-lg) !important;
+            font-family: 'DM Sans', sans-serif !important;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.25) !important;
+            width: 420px !important;
+            max-width: calc(100vw - 32px) !important; /* ← safe on mobile */
+        }
+
+        .swal2-title {
+            font-family: 'Sora', sans-serif !important;
+            font-size: 1.15rem !important;
+        }
+
+        .swal2-html-container {
+            font-size: 0.87rem !important;
+            line-height: 1.6 !important;
+        }
+
+        .swal2-confirm,
+        .swal2-cancel {
+            border-radius: var(--radius-sm) !important;
+            font-weight: 600 !important;
+            padding: 9px 22px !important;
+            font-size: 0.85rem !important;
+        }
+
+        /* ── Scrollbar ────────────────────────── */
+        ::-webkit-scrollbar       { width:6px; height:6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius:4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ptc_IGH_Sys</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+    @* ── Mobile Sidebar Overlay ── *@
+    <div id="sidebar-overlay" onclick="PTC.closeMobileSidebar()"></div>
+
+    @* ══ NAVIGATION (Left Sidebar) ════════════ *@
+    @await Html.PartialAsync("_Navigation")
+
+    @* ── Hidden Logout Form ── *@
+    <form id="logoutForm" method="post" asp-controller="Account" asp-action="Logout" style="display:none;">
+        @Html.AntiForgeryToken()
+    </form>
+
+    @* ══ MAIN WRAPPER ══════════════════════════ *@
+    <div id="main-wrapper">
+
+        @* ══ HEADER (Top Bar) ══════════════════ *@
+        @await Html.PartialAsync("_Header")
+
+        @* ══ FLASH MESSAGES ════════════════════ *@
+        @await Html.PartialAsync("_Flash")
+
+        @* ══ PAGE CONTENT ══════════════════════ *@
+        <main id="content-area">
             @RenderBody()
         </main>
+
+        @* ══ FOOTER ════════════════════════════ *@
+        @await Html.PartialAsync("_Footer")
+
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - ptc_IGH_Sys - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    @* ══════════════════════════════════════════
+       SCRIPTS — Load Order Matters!
+       1. jQuery  (Kendo requires it)
+       2. Bootstrap
+       3. Kendo UI (local 2018.2.516)
+       4. SweetAlert2
+       5. Site JS
+    ══════════════════════════════════════════ *@
+
+    @* jQuery — required by Kendo 2018 *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @* Bootstrap 5 Bundle *@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+    @* Kendo UI 2018.2.516 — LOCAL *@
+    <script src="~/lib/kendo/2018.2.516/kendo.all.min.js"></script>
+
+    @* SweetAlert2 *@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+
+    <script>
+    // ═══════════════════════════════════════════════
+    //  PTC GLOBAL NAMESPACE
+    //  Available on every page:
+    //   PTC.toast(icon, title)
+    //   PTC.confirm(title, text, onConfirm)
+    //   PTC.success(title, text)
+    //   PTC.error(title, text)
+    //   PTC.kendoAlert(title, message)    ← Kendo 2018 dialog
+    //   PTC.kendoConfirm(title, msg, fn) ← Kendo 2018 confirm
+    //   PTC.toggleSidebar()
+    //   PTC.closeMobileSidebar()
+    //   PTC.confirmLogout()
+    // ═══════════════════════════════════════════════
+    window.PTC = (function () {
+
+        // ── Sidebar ────────────────────────────
+        function toggleSidebar() {
+            var isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                document.body.classList.toggle('mobile-open');
+            } else {
+                document.body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed',
+                    document.body.classList.contains('sidebar-collapsed'));
+            }
+        }
+
+        function closeMobileSidebar() {
+            document.body.classList.remove('mobile-open');
+        }
+
+        // Restore on load
+        if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 768) {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
+        // ── SweetAlert2 helpers ────────────────
+        var toastMixin = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3500,
+            timerProgressBar: true,
+            didOpen: function(t) {
+                t.addEventListener('mouseenter', Swal.stopTimer);
+                t.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        function toast(icon, title) {
+            toastMixin.fire({ icon: icon, title: title });
+        }
+
+        function confirm(title, text, onConfirm) {
+            Swal.fire({
+                title: title, text: text, icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Confirm',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#1a6eb5',
+                cancelButtonColor: '#94a3b8',
+                reverseButtons: true,
+                borderRadius: '12px'
+            }).then(function(r) { if (r.isConfirmed) onConfirm(); });
+        }
+
+        function success(title, text) {
+            Swal.fire({
+                icon: 'success', title: title, text: text,
+                confirmButtonColor: '#1a6eb5'
+            });
+        }
+
+        function error(title, text) {
+            Swal.fire({
+                icon: 'error', title: title, text: text,
+                confirmButtonColor: '#dc2626'
+            });
+        }
+
+        // ── Kendo 2018 Dialog helpers ──────────
+        // Creates a Kendo Window as a modal alert
+        function kendoAlert(title, message, icon) {
+            icon = icon || 'k-i-information';
+            var uid  = 'kdlg_' + Date.now();
+            var html = '<div id="' + uid + '" style="padding:10px 0 6px;">'
+                     + '<div style="display:flex;align-items:flex-start;gap:14px;">'
+                     + '<span class="k-icon ' + icon + '" style="font-size:32px;flex-shrink:0;margin-top:2px;"></span>'
+                     + '<div style="font-size:0.9rem;line-height:1.6;color:#334155;">' + message + '</div>'
+                     + '</div></div>';
+
+            $('body').append(html);
+
+            var dlg = $('#' + uid).kendoWindow({
+                title: title,
+                modal: true,
+                resizable: false,
+                draggable: true,
+                width: '400px',
+                actions: ['close'],
+                close: function() { this.destroy(); }
+            }).data('kendoWindow');
+
+            // Append OK button
+            dlg.element.after(
+                '<div style="padding:10px 16px 14px;text-align:right;background:#f8fafc;'
+              + 'border-top:1px solid #e2e8f0;border-radius:0 0 8px 8px;">'
+              + '<button class="k-button k-button-icontext" onclick="$(\'#' + uid + '\').data(\'kendoWindow\').close()">'
+              + '<span class=\'k-icon k-i-check\'></span> OK'
+              + '</button></div>'
+            );
+
+            dlg.center().open();
+        }
+
+        // Kendo 2018 modal confirm
+        function kendoConfirm(title, message, onConfirm) {
+            var uid  = 'kconf_' + Date.now();
+            var html = '<div id="' + uid + '" style="padding:10px 0 6px;">'
+                     + '<div style="display:flex;align-items:flex-start;gap:14px;">'
+                     + '<span class="k-icon k-i-warning" style="font-size:32px;color:#d97706;flex-shrink:0;margin-top:2px;"></span>'
+                     + '<div style="font-size:0.9rem;line-height:1.6;color:#334155;">' + message + '</div>'
+                     + '</div></div>';
+
+            $('body').append(html);
+
+            var dlg = $('#' + uid).kendoWindow({
+                title: title,
+                modal: true,
+                resizable: false,
+                draggable: false,
+                width: '420px',
+                actions: [],
+                close: function() { this.destroy(); }
+            }).data('kendoWindow');
+
+            dlg.element.after(
+                '<div style="padding:10px 16px 14px;text-align:right;background:#f8fafc;'
+              + 'border-top:1px solid #e2e8f0;border-radius:0 0 8px 8px;display:flex;justify-content:flex-end;gap:8px;">'
+              + '<button class="k-button" id="' + uid + '_cancel">Cancel</button>'
+              + '<button class="k-button k-primary" id="' + uid + '_ok">Confirm</button>'
+              + '</div>'
+            );
+
+            dlg.center().open();
+
+            $(document).on('click', '#' + uid + '_cancel', function() {
+                dlg.close();
+                $(document).off('click', '#' + uid + '_cancel');
+                $(document).off('click', '#' + uid + '_ok');
+            });
+
+            $(document).on('click', '#' + uid + '_ok', function() {
+                dlg.close();
+                $(document).off('click', '#' + uid + '_cancel');
+                $(document).off('click', '#' + uid + '_ok');
+                if (typeof onConfirm === 'function') onConfirm();
+            });
+        }
+
+        // ── Logout ────────────────────────────
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Sign Out?',
+                text: 'You will be signed out of the PTC IGH System.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Sign Out',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b',
+                reverseButtons: true
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Signing out...',
+                        timer: 700,
+                        showConfirmButton: false,
+                        didOpen: function() { Swal.showLoading(); }
+                    }).then(function() {
+                        document.getElementById('logoutForm').submit();
+                    });
+                }
+            });
+        }
+
+        // ── Fullscreen ─────────────────────────
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                $('#fsBtn i').removeClass('bi-fullscreen').addClass('bi-fullscreen-exit');
+            } else {
+                document.exitFullscreen();
+                $('#fsBtn i').removeClass('bi-fullscreen-exit').addClass('bi-fullscreen');
+            }
+        }
+
+        // ── Active nav link ────────────────────
+        $(function() {
+            // Set user display names from claims
+            var raw  = '@(User.Identity?.Name ?? "User")';
+            var name = raw.toUpperCase();
+            var init = name.length >= 2 ? name.substring(0, 2) : name;
+            $('.js-user-name').text(name);
+            $('.js-user-init').text(init);
+
+            // Highlight active nav link
+            var path = window.location.pathname.toLowerCase();
+            $('.sb-nav-link[href]').each(function() {
+                var href = ($(this).attr('href') || '').toLowerCase();
+                if (href !== '#' && href !== '/' && path.includes(href.split('/')[1] || '___')) {
+                    $(this).addClass('active');
+                    var sub = $(this).closest('.sb-submenu');
+                    if (sub.length) {
+                        sub.addClass('show');
+                        $('[data-bs-target="#' + sub.attr('id') + '"]').attr('aria-expanded', 'true');
+                    }
+                }
+            });
+
+            // Footer clock
+            function tick() {
+                var now = new Date();
+                var d = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+                var t = now.toLocaleTimeString('en-GB', { hour12: false });
+                $('#footerClock').text(d + '  ' + t);
+            }
+            tick();
+            setInterval(tick, 1000);
+        });
+
+        return {
+            toggleSidebar:    toggleSidebar,
+            closeMobileSidebar: closeMobileSidebar,
+            toast:            toast,
+            confirm:          confirm,
+            success:          success,
+            error:            error,
+            kendoAlert:       kendoAlert,
+            kendoConfirm:     kendoConfirm,
+            confirmLogout:    confirmLogout,
+            toggleFullscreen: toggleFullscreen
+        };
+    })();
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

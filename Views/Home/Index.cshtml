@@ -1,8 +1,557 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"]             = "Dashboard";
+    ViewData["BreadcrumbSection"] = "Main";
+    ViewData["BreadcrumbPage"]    = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@* Demo: TempData flash messages — uncomment to test *@
+@* TempData["Success"] = "Welcome back! Last login: Today 08:30 AM"; *@
+
+<!-- ── Page Header ─────────────────────────── -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Welcome back — here's the live overview for today.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-ptc-outline" onclick="PTC.toast('info','Data refreshed!')">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+        <button class="btn-ptc-primary" id="btnDemoKendoAlert">
+            <i class="bi bi-bell"></i> Demo Kendo Alert
+        </button>
+    </div>
 </div>
+
+<!-- ── STAT CARDS ──────────────────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card blue">
+            <div class="stat-icon blue"><i class="bi bi-truck"></i></div>
+            <div style="flex:1;">
+                <div class="stat-value">150</div>
+                <div class="stat-label">Total Deliveries</div>
+                <div class="stat-trend up"><i class="bi bi-arrow-up"></i> +12% vs yesterday</div>
+            </div>
+            <i class="bi bi-truck stat-bg-icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card green">
+            <div class="stat-icon green"><i class="bi bi-box-arrow-in-right"></i></div>
+            <div style="flex:1;">
+                <div class="stat-value">53</div>
+                <div class="stat-label">Gate In Today</div>
+                <div class="stat-trend up"><i class="bi bi-arrow-up"></i> +8% vs yesterday</div>
+            </div>
+            <i class="bi bi-box-arrow-in-right stat-bg-icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card orange">
+            <div class="stat-icon orange"><i class="bi bi-person-badge"></i></div>
+            <div style="flex:1;">
+                <div class="stat-value">44</div>
+                <div class="stat-label">Active Drivers</div>
+                <div class="stat-trend down"><i class="bi bi-arrow-down"></i> -2 vs yesterday</div>
+            </div>
+            <i class="bi bi-person-badge stat-bg-icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card red">
+            <div class="stat-icon red"><i class="bi bi-exclamation-triangle"></i></div>
+            <div style="flex:1;">
+                <div class="stat-value">7</div>
+                <div class="stat-label">Pending Checks</div>
+                <div class="stat-trend up"><i class="bi bi-arrow-up"></i> +3 new alerts</div>
+            </div>
+            <i class="bi bi-exclamation-triangle stat-bg-icon"></i>
+        </div>
+    </div>
+</div>
+
+<!-- ── KENDO ALERT DEMO PANEL ──────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="ptc-card">
+            <div class="ptc-card-header">
+                <h2 class="ptc-card-title">
+                    <i class="bi bi-window-stack"></i>
+                    Kendo UI 2018 — Dialog Demos
+                </h2>
+                <span style="font-size:0.72rem;color:var(--text-muted);">
+                    Using local ~/lib/kendo/2018.2.516
+                </span>
+            </div>
+            <div class="ptc-card-body">
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+
+                    @* ── Demo 1: Kendo Info Alert ── *@
+                    <button class="btn-ptc-primary" id="btnKendoInfo">
+                        <i class="bi bi-info-circle"></i> Kendo Info Alert
+                    </button>
+
+                    @* ── Demo 2: Kendo Warning Alert ── *@
+                    <button class="btn-ptc-outline" id="btnKendoWarn"
+                            style="color:var(--gold);border-color:var(--gold);">
+                        <i class="bi bi-exclamation-triangle"></i> Kendo Warning Alert
+                    </button>
+
+                    @* ── Demo 3: Kendo Confirm Dialog ── *@
+                    <button class="btn-ptc-outline" id="btnKendoConfirm"
+                            style="color:var(--clr-success);border-color:var(--clr-success);">
+                        <i class="bi bi-patch-question"></i> Kendo Confirm Dialog
+                    </button>
+
+                    @* ── Demo 4: Kendo Notification ── *@
+                    <button class="btn-ptc-outline" id="btnKendoNotif"
+                            style="color:var(--clr-info);border-color:var(--clr-info);">
+                        <i class="bi bi-bell-fill"></i> Kendo Notification
+                    </button>
+
+                    @* ── Demo 5: SweetAlert2 Toast ── *@
+                    <button class="btn-ptc-outline" id="btnSwalToast"
+                            style="color:#7c3aed;border-color:#7c3aed;">
+                        <i class="bi bi-stars"></i> SweetAlert2 Toast
+                    </button>
+
+                    @* ── Demo 6: Kendo Window with Form ── *@
+                    <button class="btn-ptc-primary" id="btnKendoForm"
+                            style="background:linear-gradient(135deg,var(--clr-success),#34d399);">
+                        <i class="bi bi-window-plus"></i> Kendo Form Window
+                    </button>
+
+                </div>
+                <div style="margin-top:14px;padding:12px 14px;background:#f8fafc;
+                            border-radius:8px;border-left:3px solid var(--accent-lt);">
+                    <p style="margin:0;font-size:0.8rem;color:var(--text-secondary);">
+                        <strong>How to use in your pages:</strong>
+                        <code style="background:#e2e8f0;padding:1px 6px;border-radius:4px;font-size:0.78rem;">
+                            PTC.kendoAlert('Title', 'Message')
+                        </code> &nbsp;·&nbsp;
+                        <code style="background:#e2e8f0;padding:1px 6px;border-radius:4px;font-size:0.78rem;">
+                            PTC.kendoConfirm('Title', 'Message', callbackFn)
+                        </code> &nbsp;·&nbsp;
+                        <code style="background:#e2e8f0;padding:1px 6px;border-radius:4px;font-size:0.78rem;">
+                            PTC.toast('success'|'error'|'info'|'warning', 'Message')
+                        </code>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── MAIN CONTENT ROW ─────────────────────── -->
+<div class="row g-3 mb-4">
+
+    <!-- Kendo Grid — Gate Activity -->
+    <div class="col-xl-8">
+        <div class="ptc-card">
+            <div class="ptc-card-header">
+                <h2 class="ptc-card-title">
+                    <i class="bi bi-table"></i> Recent Gate Activity
+                </h2>
+                <button class="btn-ptc-outline" style="padding:5px 12px;font-size:0.75rem;"
+                        onclick="PTC.toast('info','Loading full list...')">
+                    View All
+                </button>
+            </div>
+            <div class="ptc-card-body" style="padding:10px;">
+                <div id="gateActivityGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Status Panel -->
+    <div class="col-xl-4">
+        <div class="ptc-card h-100">
+            <div class="ptc-card-header">
+                <h2 class="ptc-card-title"><i class="bi bi-activity"></i> Live Status</h2>
+                <span style="font-size:0.7rem;color:var(--text-muted);">
+                    <span class="online-dot"></span> Live
+                </span>
+            </div>
+            <div class="ptc-card-body">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+
+                    @foreach (var gate in new[] {
+                        new { Name="Gate 1 — Main",    Sub="North Entrance", Open=true  },
+                        new { Name="Gate 2 — Loading", Sub="South Bay",      Open=true  },
+                        new { Name="Gate 3 — Exit",    Sub="East Wing",      Open=false },
+                    })
+                    {
+                        <div style="display:flex;align-items:center;justify-content:space-between;
+                                    padding:11px 13px;background:#f8fafc;border-radius:10px;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="width:34px;height:34px;border-radius:9px;
+                                            background:@(gate.Open ? "rgba(5,150,105,0.1)" : "rgba(220,38,38,0.1)");
+                                            display:flex;align-items:center;justify-content:center;
+                                            color:@(gate.Open ? "#10b981" : "#ef4444");">
+                                    <i class="bi bi-gate" style="font-size:15px;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight:600;font-size:0.8rem;">@gate.Name</div>
+                                    <div style="font-size:0.7rem;color:var(--text-muted);">@gate.Sub</div>
+                                </div>
+                            </div>
+                            <span style="background:@(gate.Open ? "#dcfce7" : "#fee2e2");
+                                         color:@(gate.Open ? "#15803d" : "#dc2626");
+                                         font-size:0.67rem;font-weight:700;
+                                         padding:3px 9px;border-radius:20px;">
+                                @(gate.Open ? "OPEN" : "CLOSED")
+                            </span>
+                        </div>
+                    }
+
+                    <div style="padding:12px 13px;background:#f8fafc;border-radius:10px;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
+                            <span style="font-size:0.78rem;font-weight:600;">Daily Capacity</span>
+                            <span style="font-size:0.78rem;color:var(--accent-lt);font-weight:700;">68%</span>
+                        </div>
+                        <div id="capacityProgress"></div>
+                    </div>
+
+                    <div style="padding:12px 13px;background:#f8fafc;border-radius:10px;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
+                            <span style="font-size:0.78rem;font-weight:600;">On-Time Delivery</span>
+                            <span style="font-size:0.78rem;color:#10b981;font-weight:700;">91%</span>
+                        </div>
+                        <div id="deliveryProgress"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── BOTTOM ROW ──────────────────────────── -->
+<div class="row g-3">
+    <!-- Pending Approvals -->
+    <div class="col-xl-6">
+        <div class="ptc-card">
+            <div class="ptc-card-header">
+                <h2 class="ptc-card-title">
+                    <i class="bi bi-hourglass-split"></i> Pending Approvals
+                </h2>
+                <span style="background:#fef3c7;color:#92400e;font-size:0.68rem;
+                             font-weight:700;padding:3px 10px;border-radius:20px;">7 items</span>
+            </div>
+            <div class="ptc-card-body" style="padding:0;">
+                <ul style="list-style:none;margin:0;padding:0;">
+                    @{
+                        var approvals = new[] {
+                            new { Id="DO-2024-089", Type="Delivery Order",  Driver="Ahmad B.",  Time="09:14 AM", Color="#3b82f6" },
+                            new { Id="GI-2024-221", Type="Gate In Request", Driver="Tan C.K.",  Time="09:32 AM", Color="#10b981" },
+                            new { Id="DO-2024-090", Type="Delivery Order",  Driver="Ravi S.",   Time="10:05 AM", Color="#3b82f6" },
+                            new { Id="VH-2024-041", Type="Vehicle Check",   Driver="System",    Time="10:18 AM", Color="#f59e0b" },
+                        };
+                    }
+                    @foreach (var item in approvals)
+                    {
+                        <li style="display:flex;align-items:center;gap:12px;
+                                   padding:11px 18px;border-bottom:1px solid #f1f5f9;">
+                            <div style="width:8px;height:8px;border-radius:50%;
+                                        background:@item.Color;flex-shrink:0;"></div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-weight:600;font-size:0.82rem;">@item.Id</div>
+                                <div style="font-size:0.71rem;color:var(--text-muted);">
+                                    @item.Type &mdash; @item.Driver
+                                </div>
+                            </div>
+                            <div style="font-size:0.71rem;color:var(--text-muted);flex-shrink:0;">
+                                @item.Time
+                            </div>
+                            <button class="btn-ptc-primary"
+                                    style="padding:4px 11px;font-size:0.72rem;"
+                                    onclick="approveItem('@item.Id')">
+                                Approve
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-xl-6">
+        <div class="ptc-card">
+            <div class="ptc-card-header">
+                <h2 class="ptc-card-title">
+                    <i class="bi bi-lightning-charge"></i> Quick Actions
+                </h2>
+            </div>
+            <div class="ptc-card-body">
+                <div class="row g-3">
+                    @{
+                        var actions = new[] {
+                            new { Icon="bi-box-arrow-in-right", Label="New Gate In",     Bg="rgba(26,110,181,0.1)",  Txt="#1a6eb5" },
+                            new { Icon="bi-box-arrow-right",    Label="New Gate Out",    Bg="rgba(5,150,105,0.1)",   Txt="#059669" },
+                            new { Icon="bi-truck",              Label="New Delivery",    Bg="rgba(217,119,6,0.1)",   Txt="#d97706" },
+                            new { Icon="bi-person-plus",        Label="Register Driver", Bg="rgba(8,145,178,0.1)",   Txt="#0891b2" },
+                            new { Icon="bi-clipboard-check",    Label="Vehicle Check",   Bg="rgba(124,58,237,0.1)",  Txt="#7c3aed" },
+                            new { Icon="bi-bar-chart-line",     Label="View Reports",    Bg="rgba(220,38,38,0.1)",   Txt="#dc2626" },
+                        };
+                    }
+                    @foreach (var qa in actions)
+                    {
+                        <div class="col-4">
+                            <button onclick="PTC.toast('info','Opening @qa.Label...')"
+                                    style="width:100%;padding:15px 6px;
+                                           background:@qa.Bg;border:1px solid @qa.Bg;
+                                           border-radius:11px;cursor:pointer;text-align:center;
+                                           transition:transform 0.2s,box-shadow 0.2s;"
+                                    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 18px rgba(0,0,0,0.09)'"
+                                    onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <i class="bi @qa.Icon"
+                                   style="font-size:21px;color:@qa.Txt;display:block;margin-bottom:6px;"></i>
+                                <span style="font-size:0.71rem;font-weight:600;
+                                             color:var(--text-primary);line-height:1.3;display:block;">
+                                    @qa.Label
+                                </span>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+$(function () {
+
+    // ══════════════════════════════════════════════
+    //  KENDO 2018 DIALOG DEMOS
+    // ══════════════════════════════════════════════
+
+    // Demo 1: Info Alert
+    $('#btnKendoInfo, #btnDemoKendoAlert').on('click', function() {
+        PTC.kendoAlert(
+            'System Information',
+            'PTC IGH System is running normally.<br><br>'
+            + '<strong>Server:</strong> SG-PROD-01<br>'
+            + '<strong>Version:</strong> 2.0.4<br>'
+            + '<strong>Last sync:</strong> ' + new Date().toLocaleTimeString(),
+            'k-i-information'
+        );
+    });
+
+    // Demo 2: Warning Alert
+    $('#btnKendoWarn').on('click', function() {
+        PTC.kendoAlert(
+            'Session Warning',
+            'Your session will expire in <strong>5 minutes</strong>.<br>'
+            + 'Please save your work or click anywhere to continue.',
+            'k-i-warning'
+        );
+    });
+
+    // Demo 3: Confirm Dialog
+    $('#btnKendoConfirm').on('click', function() {
+        PTC.kendoConfirm(
+            'Confirm Gate Close',
+            'Are you sure you want to close <strong>Gate 2 — Loading Bay</strong>?<br>'
+            + 'All pending entries will be placed on hold.',
+            function() {
+                PTC.toast('success', 'Gate 2 closed successfully.');
+            }
+        );
+    });
+
+    // Demo 4: Kendo Notification widget
+    $('#btnKendoNotif').on('click', function() {
+        if (!window._kendoNotif) {
+            $('body').append('<span id="kendoNotifWidget"></span>');
+            window._kendoNotif = $('#kendoNotifWidget').kendoNotification({
+                position: { pinned: true, top: 70, right: 20 },
+                autoHideAfter: 4000,
+                stacking: 'down',
+                templates: [{
+                    type: 'info',
+                    template: '<div style="padding:8px 4px;">'
+                             + '<strong>#= title #</strong><br>'
+                             + '<span style="font-size:0.82rem;">#= message #</span></div>'
+                }]
+            }).data('kendoNotification');
+        }
+        window._kendoNotif.show({
+            title:   'Gate Activity',
+            message: 'TRK-2241 has entered Gate 1 at ' + new Date().toLocaleTimeString()
+        }, 'info');
+    });
+
+    // Demo 5: SweetAlert2 Toast chain
+    $('#btnSwalToast').on('click', function() {
+        PTC.toast('success', 'Record saved successfully!');
+        setTimeout(function() { PTC.toast('info', 'Email notification sent.'); }, 1200);
+    });
+
+    // Demo 6: Kendo Window with embedded form
+    $('#btnKendoForm').on('click', function() {
+        if ($('#quickEntryWindow').length) {
+            $('#quickEntryWindow').data('kendoWindow').center().open();
+            return;
+        }
+
+        var formHtml = '<div id="quickEntryWindow" style="padding:4px 0;">'
+            + '<form id="quickEntryForm">'
+            + '<div style="margin-bottom:12px;">'
+            + '  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Vehicle No.</label>'
+            + '  <input class="k-textbox" name="vehicleNo" style="width:100%;" placeholder="e.g. SGX1234A" />'
+            + '</div>'
+            + '<div style="margin-bottom:12px;">'
+            + '  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Driver Name</label>'
+            + '  <input class="k-textbox" name="driverName" style="width:100%;" placeholder="Full name" />'
+            + '</div>'
+            + '<div style="margin-bottom:12px;">'
+            + '  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Gate</label>'
+            + '  <select class="k-widget" name="gate" style="width:100%;" id="gateDropdown">'
+            + '    <option value="">-- Select Gate --</option>'
+            + '    <option value="1">Gate 1 — Main</option>'
+            + '    <option value="2">Gate 2 — Loading</option>'
+            + '  </select>'
+            + '</div>'
+            + '</form>'
+            + '</div>';
+
+        $('body').append(formHtml);
+
+        var wnd = $('#quickEntryWindow').kendoWindow({
+            title: 'Quick Gate Entry',
+            modal: true,
+            resizable: false,
+            draggable: true,
+            width: '420px',
+            actions: ['close'],
+            close: function() { /* keep for reuse */ }
+        }).data('kendoWindow');
+
+        // Init Kendo DropDownList on the select
+        $('#gateDropdown').kendoDropDownList();
+
+        // Append footer buttons
+        wnd.element.after(
+            '<div style="padding:10px 16px 14px;background:#f8fafc;'
+            + 'border-top:1px solid #e2e8f0;border-radius:0 0 8px 8px;'
+            + 'display:flex;justify-content:flex-end;gap:8px;">'
+            + '<button class="k-button" onclick="$(\'#quickEntryWindow\').data(\'kendoWindow\').close()">Cancel</button>'
+            + '<button class="k-button k-primary" id="btnSubmitQuickEntry">Save Entry</button>'
+            + '</div>'
+        );
+
+        wnd.center().open();
+
+        $(document).off('click','#btnSubmitQuickEntry').on('click','#btnSubmitQuickEntry', function() {
+            var v = $('[name="vehicleNo"]').val();
+            var d = $('[name="driverName"]').val();
+            if (!v || !d) {
+                PTC.kendoAlert('Validation', 'Please fill in all required fields.', 'k-i-warning');
+                return;
+            }
+            $('#quickEntryWindow').data('kendoWindow').close();
+            PTC.toast('success', 'Gate entry for ' + v + ' saved!');
+        });
+    });
+
+    // ══════════════════════════════════════════════
+    //  APPROVE function using Kendo Confirm
+    // ══════════════════════════════════════════════
+    window.approveItem = function(id) {
+        PTC.kendoConfirm(
+            'Approve ' + id + '?',
+            'Confirm approval of <strong>' + id + '</strong>. This action will notify the driver.',
+            function() {
+                PTC.toast('success', id + ' approved successfully!');
+            }
+        );
+    };
+
+    // ══════════════════════════════════════════════
+    //  KENDO GRID — Gate Activity
+    // ══════════════════════════════════════════════
+    $('#gateActivityGrid').kendoGrid({
+        dataSource: {
+            data: [
+                { id:'GI-001', type:'Gate In',  vehicle:'TRK-2241', driver:'Ahmad Bin Ismail', time:'08:15 AM', status:'Completed'   },
+                { id:'DO-089', type:'Delivery', vehicle:'VAN-1102', driver:'Tan Chee Keong',   time:'08:42 AM', status:'In Progress' },
+                { id:'GI-002', type:'Gate In',  vehicle:'TRK-3389', driver:'Ravi Subramaniam', time:'09:05 AM', status:'Completed'   },
+                { id:'GO-041', type:'Gate Out', vehicle:'TRK-2241', driver:'Ahmad Bin Ismail', time:'09:30 AM', status:'Completed'   },
+                { id:'VC-011', type:'V.Check',  vehicle:'VAN-0987', driver:'System Check',     time:'10:00 AM', status:'Pending'     },
+                { id:'DO-090', type:'Delivery', vehicle:'TRK-5571', driver:'Lim Ah Kow',       time:'10:22 AM', status:'Pending'     },
+            ],
+            pageSize: 5
+        },
+        columns: [
+            { field:'id',      title:'Ref #',   width:90,
+              attributes:{ style:'font-family:Sora,sans-serif;font-weight:600;font-size:0.78rem;' } },
+            { field:'type',    title:'Type',    width:88 },
+            { field:'vehicle', title:'Vehicle', width:92 },
+            { field:'driver',  title:'Driver'              },
+            { field:'time',    title:'Time',    width:88   },
+            {
+                field:'status', title:'Status', width:108,
+                template: function(d) {
+                    var map = {
+                        'Completed':   ['#dcfce7','#15803d'],
+                        'In Progress': ['#dbeafe','#1d4ed8'],
+                        'Pending':     ['#fef3c7','#92400e']
+                    };
+                    var c = map[d.status] || ['#f1f5f9','#64748b'];
+                    return '<span style="background:' + c[0] + ';color:' + c[1]
+                         + ';font-size:0.67rem;font-weight:700;padding:2px 9px;'
+                         + 'border-radius:20px;">' + d.status + '</span>';
+                }
+            },
+            {
+                title: 'Action', width: 80,
+                template: function(d) {
+                    return '<button class="k-button" style="font-size:0.72rem;padding:2px 8px;" '
+                         + 'onclick="PTC.kendoAlert(\'Record Details\','
+                         + '\'<b>Ref:</b> ' + d.id + '<br><b>Driver:</b> ' + d.driver
+                         + '<br><b>Vehicle:</b> ' + d.vehicle + '<br><b>Status:</b> ' + d.status + '\''
+                         + ')">View</button>';
+                }
+            }
+        ],
+        pageable: { buttonCount: 3 },
+        sortable: true,
+        scrollable: false
+    });
+
+    // ══════════════════════════════════════════════
+    //  KENDO PROGRESSBARS
+    // ══════════════════════════════════════════════
+    $('#capacityProgress').kendoProgressBar({
+        type: 'value', value: 68, min: 0, max: 100,
+        animation: { duration: 900 }
+    });
+
+    $('#deliveryProgress').kendoProgressBar({
+        type: 'value', value: 91, min: 0, max: 100,
+        animation: { duration: 900 }
+    });
+
+    // Style progress bars to match theme
+    setTimeout(function() {
+        $('#capacityProgress .k-selected')
+            .css('background', 'linear-gradient(90deg,#1a6eb5,#3b96e8)');
+        $('#deliveryProgress .k-selected')
+            .css('background', 'linear-gradient(90deg,#059669,#10b981)');
+        $('.k-progressbar')
+            .css({ 'border-radius':'5px', 'overflow':'hidden', 'height':'8px' });
+        $('.k-selected').css('border-radius', '5px');
+    }, 150);
+
+    // ── Welcome toast ───────────────────────────
+    setTimeout(function() {
+        PTC.toast('success', 'Welcome to PTC IGH System!');
+    }, 600);
+
+});
+</script>
+}

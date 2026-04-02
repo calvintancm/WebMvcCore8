@@ -1,0 +1,275 @@
+@* ═══════════════════════════════════════════
+   _Header.cshtml — Top Navigation Bar
+═══════════════════════════════════════════ *@
+<style>
+    /* ── TOP BAR ──────────────────────────────── */
+    #topbar {
+        position: sticky; top: 0;
+        height: var(--topbar-h);
+        background: var(--topbar-bg);
+        border-bottom: 1px solid var(--topbar-border);
+        box-shadow: var(--topbar-shadow);
+        display: flex; align-items: center;
+        padding: 0 20px; gap: 10px;
+        z-index: 1030; flex-shrink: 0;
+    }
+
+    /* Toggle button */
+    #sidebarToggle {
+        width: 36px; height: 36px;
+        border: none; background: none;
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 19px; flex-shrink: 0;
+        transition: background var(--transition), color var(--transition);
+    }
+
+    #sidebarToggle:hover { background: var(--content-bg); color: var(--accent); }
+
+    /* Breadcrumb */
+    .topbar-breadcrumb {
+        flex: 1; display: flex; align-items: center; gap: 6px;
+        font-size: 0.8rem; color: var(--text-muted);
+        overflow: hidden;
+    }
+
+    .topbar-breadcrumb .bc-sep   { font-size: 9px; }
+    .topbar-breadcrumb .bc-current { color: var(--text-primary); font-weight: 600; }
+
+    /* Right controls */
+    .topbar-right { display: flex; align-items: center; gap: 3px; }
+
+    .topbar-btn {
+        width: 36px; height: 36px; border: none; background: none;
+        border-radius: var(--radius-sm); color: var(--text-secondary);
+        cursor: pointer; font-size: 16px; position: relative;
+        display: flex; align-items: center; justify-content: center;
+        transition: background var(--transition), color var(--transition);
+    }
+
+    .topbar-btn:hover { background: var(--content-bg); color: var(--accent); }
+
+    .topbar-badge {
+        position: absolute; top: 4px; right: 3px;
+        width: 16px; height: 16px; border-radius: 50%;
+        font-size: 0.52rem; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; border: 2px solid var(--topbar-bg);
+    }
+
+    .topbar-badge.blue   { background: var(--accent-lt); }
+    .topbar-badge.orange { background: var(--gold); }
+    .topbar-badge.red    { background: var(--clr-danger); }
+
+    .topbar-divider {
+        width: 1px; height: 26px;
+        background: var(--topbar-border); margin: 0 5px;
+    }
+
+    /* User dropdown trigger */
+    .topbar-user {
+        display: flex; align-items: center; gap: 9px;
+        padding: 5px 10px 5px 6px;
+        border-radius: var(--radius-sm);
+        cursor: pointer; border: none; background: none;
+        transition: background var(--transition);
+    }
+
+    .topbar-user:hover { background: var(--content-bg); }
+
+    .topbar-user-avatar {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold), var(--gold-lt));
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Sora', sans-serif; font-weight: 700;
+        font-size: 0.72rem; color: #fff;
+        box-shadow: 0 2px 6px rgba(217,119,6,0.35);
+    }
+
+    .topbar-user-info   { text-align: left; line-height: 1.2; }
+    .topbar-user-name   { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
+    .topbar-user-role   { font-size: 0.66rem; color: var(--text-muted); }
+
+    /* Dropdown */
+    .dropdown-menu {
+        border: 1px solid var(--topbar-border);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.11);
+        border-radius: var(--radius);
+        padding: 6px; min-width: 200px;
+    }
+
+    .dropdown-item {
+        border-radius: var(--radius-sm);
+        padding: 8px 12px; font-size: 0.82rem;
+        color: var(--text-primary);
+        display: flex; align-items: center; gap: 10px;
+        transition: background var(--transition);
+    }
+
+    .dropdown-item:hover { background: var(--content-bg); color: var(--accent); }
+    .dropdown-item i     { width: 16px; text-align: center; color: var(--text-muted); }
+    .dropdown-divider    { margin: 4px 0; border-color: var(--topbar-border); }
+
+    /* Notification items */
+    .notif-item {
+        padding: 10px 12px; display: flex; gap: 10px;
+        align-items: flex-start; cursor: pointer;
+        border-radius: var(--radius-sm);
+        transition: background var(--transition);
+        text-decoration: none; color: inherit;
+    }
+
+    .notif-item:hover { background: var(--content-bg); }
+    .notif-title   { font-weight: 600; font-size: 0.79rem; color: var(--text-primary); }
+    .notif-time    { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+    @@media (max-width: 576px) {
+        #topbar
+
+    {
+        padding: 0 12px;
+        gap: 6px;
+    }
+
+    .topbar-breadcrumb {
+        font-size: 0.74rem;
+        /* Truncate long breadcrumb text */
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        max-width: 160px;
+    }
+
+    .topbar-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 15px;
+    }
+
+    }</style>
+
+<header id="topbar">
+
+    @* Sidebar toggle *@
+    <button id="sidebarToggle" onclick="PTC.toggleSidebar()" title="Toggle Sidebar">
+        <i class="bi bi-list"></i>
+    </button>
+
+    @* Breadcrumb *@
+    <div class="topbar-breadcrumb">
+        <i class="bi bi-house" style="font-size:11px;"></i>
+        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+        <span>@(ViewData["BreadcrumbSection"] ?? "Main")</span>
+        @if (ViewData["BreadcrumbPage"] != null)
+        {
+            <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+            <span class="bc-current">@ViewData["BreadcrumbPage"]</span>
+        }
+        else
+        {
+            <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+            <span class="bc-current">@(ViewData["Title"] ?? "Dashboard")</span>
+        }
+    </div>
+
+    @* Right controls *@
+    <div class="topbar-right">
+
+        @* Search — always visible *@
+        <button class="topbar-btn" title="Quick Search" id="btnSearch">
+            <i class="bi bi-search"></i>
+        </button>
+
+        @* Notifications — always visible *@
+        <div class="dropdown">
+            <button class="topbar-btn" title="Notifications"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-bell"></i>
+                <span class="topbar-badge orange">5</span>
+            </button>
+            @* ... keep existing dropdown content unchanged ... *@
+        </div>
+
+        @* Messages — hide on very small screens *@
+        <button class="topbar-btn d-none d-sm-flex" title="Messages">
+            <i class="bi bi-chat-dots"></i>
+            <span class="topbar-badge blue">3</span>
+        </button>
+
+        @* Fullscreen — hide on mobile (not useful on touch) *@
+        <button class="topbar-btn d-none d-md-flex" title="Toggle Fullscreen"
+                id="fsBtn" onclick="PTC.toggleFullscreen()">
+            <i class="bi bi-fullscreen"></i>
+        </button>
+
+        @* Divider — hide on mobile *@
+        <div class="topbar-divider d-none d-sm-block"></div>
+
+        @* User dropdown — always visible *@
+        <div class="dropdown">
+            <button class="topbar-user dropdown-toggle"
+                    data-bs-toggle="dropdown" aria-expanded="false"
+                    style="border:none;">
+                <div class="topbar-user-avatar js-user-init">--</div>
+                @* Hide name text on mobile, show avatar only *@
+                <div class="topbar-user-info d-none d-lg-block">
+                    <div class="topbar-user-name js-user-name">Loading...</div>
+                    <div class="topbar-user-role">System User</div>
+                </div>
+                <i class="bi bi-chevron-down d-none d-sm-block"
+                   style="font-size:9px;color:var(--text-muted);margin-left:2px;"></i>
+            </button>
+
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li style="padding:10px 14px 8px;">
+                    <div style="font-weight:700;font-size:0.84rem;" class="js-user-name">Loading...</div>
+                    <div style="font-size:0.69rem;color:var(--text-muted);">System User</div>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-person-circle"></i> My Profile</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-shield-lock"></i> Change Password</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Preferences</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item" href="#"
+                       onclick="PTC.confirmLogout(); return false;"
+                       style="color:var(--clr-danger);">
+                        <i class="bi bi-box-arrow-left" style="color:var(--clr-danger);"></i> Sign Out
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+</header>
+
+<script>
+// Search button — uses Kendo 2018 Window as demo
+$(function() {
+    $('#btnSearch').on('click', function() {
+        PTC.kendoAlert(
+            'Quick Search',
+            '<div style="margin-bottom:10px;">Search across deliveries, drivers and vehicles.</div>'
+            + '<input id="kendoSearchInput" class="k-textbox" style="width:100%;" '
+            + 'placeholder="e.g. TRK-2241, Ahmad, DO-089..." />'
+            + '<div id="kendoSearchResult" style="margin-top:10px;font-size:0.8rem;'
+            + 'color:var(--text-muted);"></div>',
+            'k-i-search'
+        );
+        // Bind enter key after dialog opens
+        setTimeout(function() {
+            $('#kendoSearchInput').on('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    $('#kendoSearchResult').html(
+                        '<span style="color:var(--accent-lt);">'
+                        + '<i class="bi bi-check-circle"></i> '
+                        + 'Searching for: <strong>' + $(this).val() + '</strong>...</span>'
+                    );
+                }
+            }).focus();
+        }, 200);
+    });
+});
+</script>
