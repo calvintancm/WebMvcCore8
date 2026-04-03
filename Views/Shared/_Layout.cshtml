@@ -27,7 +27,7 @@
 
     @* ── SweetAlert2 ── *@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.1/sweetalert2.min.css" />
-
+   
     @* ── Site-wide CSS variables & shared styles ── *@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
@@ -574,7 +574,7 @@
 
     @* SweetAlert2 *@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
-
+    <script src="~/js/sweetalert-kendo.js"></script>
     <script>
     // ═══════════════════════════════════════════════
     //  PTC GLOBAL NAMESPACE
@@ -615,7 +615,7 @@
         // ── SweetAlert2 helpers ────────────────
         var toastMixin = Swal.mixin({
             toast: true,
-            position: 'top-end',
+            position: 'center',
             showConfirmButton: false,
             timer: 3500,
             timerProgressBar: true,

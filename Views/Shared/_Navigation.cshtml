@@ -1,16 +1,15 @@
 @* ═══════════════════════════════════════════
    _Navigation.cshtml — Left Sidebar
-   Lighter steel-blue palette, white text
+   - Submenu items now show icons
+   - Connector line shows hierarchy
 ═══════════════════════════════════════════ *@
 <style>
-    /* ── SIDEBAR ──────────────────────────────── */
     #sidebar {
         position: fixed;
         top: 0; left: 0; bottom: 0;
         width: var(--sidebar-w);
         background: var(--sb-bg);
-        display: flex;
-        flex-direction: column;
+        display: flex; flex-direction: column;
         z-index: 1040;
         transition: width var(--transition);
         overflow: hidden;
@@ -18,16 +17,13 @@
 
     body.sidebar-collapsed #sidebar { width: var(--sidebar-w-collapsed); }
 
-    /* ── Brand bar ─────────────────────────── */
+    /* ── Brand ─────────────────────────────── */
     .sb-brand {
         display: flex; align-items: center; gap: 12px;
-        padding: 0 17px;
-        height: var(--topbar-h);
+        padding: 0 17px; height: var(--topbar-h);
         background: var(--sb-bg-top);
         border-bottom: 1px solid var(--sb-border);
-        flex-shrink: 0;
-        text-decoration: none;
-        overflow: hidden;
+        flex-shrink: 0; text-decoration: none; overflow: hidden;
     }
 
     .sb-brand-icon {
@@ -42,195 +38,179 @@
     .sb-brand-icon i { color: #fff; font-size: 17px; }
 
     .sb-brand-text { overflow: hidden; transition: opacity var(--transition), width var(--transition); }
-
-    .sb-brand-name {
-        font-family: 'Sora', sans-serif;
-        font-size: 0.95rem; font-weight: 700;
-        color: #ffffff; white-space: nowrap; line-height: 1.2;
-    }
-
-    .sb-brand-sub {
-        font-size: 0.67rem;
-        color: var(--sb-text);
-        white-space: nowrap;
-        letter-spacing: 0.04em;
-    }
-
+    .sb-brand-name { font-family: 'Sora', sans-serif; font-size: 0.95rem; font-weight: 700; color: #fff; white-space: nowrap; line-height: 1.2; }
+    .sb-brand-sub  { font-size: 0.67rem; color: var(--sb-text); white-space: nowrap; letter-spacing: 0.04em; }
     body.sidebar-collapsed .sb-brand-text { opacity: 0; width: 0; }
 
-    /* ── User profile ─────────────────────── */
-    .sb-profile {
-        display: flex; align-items: center; gap: 11px;
-        padding: 13px 17px;
-        border-bottom: 1px solid var(--sb-border);
-        flex-shrink: 0; overflow: hidden;
-        background: rgba(0,0,0,0.08);
-    }
-
-    .sb-avatar {
-        width: 36px; height: 36px; border-radius: 50%;
-        background: linear-gradient(135deg, var(--gold), var(--gold-lt));
-        display: flex; align-items: center; justify-content: center;
-        font-family: 'Sora', sans-serif; font-weight: 700; font-size: 0.82rem;
-        color: #fff; flex-shrink: 0;
-        box-shadow: 0 2px 8px rgba(217,119,6,0.45);
-    }
-
-    .sb-profile-info { overflow: hidden; transition: opacity var(--transition); }
-
-    .sb-profile-name {
-        font-size: 0.82rem; font-weight: 600;
-        color: #ffffff;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    .sb-profile-role { font-size: 0.68rem; color: var(--sb-text); white-space: nowrap; }
-
-    body.sidebar-collapsed .sb-profile-info { opacity: 0; width: 0; overflow: hidden; }
-
-    /* ── Nav scroll area ──────────────────── */
-    .sb-nav {
-        flex: 1; overflow-y: auto; overflow-x: hidden;
-        padding: 8px 0;
-        scrollbar-width: thin;
-        scrollbar-color: var(--sb-hover) transparent;
-    }
-
-    .sb-nav::-webkit-scrollbar { width: 3px; }
+    /* ── Scroll area ───────────────────────── */
+    .sb-nav { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 8px 0; scrollbar-width: thin; scrollbar-color: var(--sb-hover) transparent; }
+    .sb-nav::-webkit-scrollbar       { width: 3px; }
     .sb-nav::-webkit-scrollbar-track { background: transparent; }
     .sb-nav::-webkit-scrollbar-thumb { background: var(--sb-hover); border-radius: 3px; }
 
-    /* ── Section titles ───────────────────── */
+    /* ── Section titles ────────────────────── */
     .sb-section-title {
         padding: 13px 20px 4px;
         font-size: 0.68rem; font-weight: 700;
         color: var(--sb-text-header);
         text-transform: uppercase; letter-spacing: 0.12em;
         white-space: nowrap;
-        transition: opacity var(--transition);
+        transition: opacity var(--transition), height var(--transition), padding var(--transition);
     }
+    body.sidebar-collapsed .sb-section-title { opacity: 0; height: 0; padding-top: 0; padding-bottom: 0; overflow: hidden; }
 
-    body.sidebar-collapsed .sb-section-title { opacity: 0; height: 0; padding: 0; overflow: hidden; }
-
-    /* ── Nav links ────────────────────────── */
     .sb-nav ul { list-style: none; padding: 0; margin: 0; }
 
+    /* ── Nav link base — shared by ALL items ── */
     .sb-nav-link {
-        display: flex; align-items: center; gap: 12px;
+        display: flex; align-items: center; gap: 11px;
         padding: 10px 17px;
         color: var(--sb-text);
-        text-decoration: none;
-        cursor: pointer;
-        white-space: nowrap;
-        position: relative;
+        text-decoration: none; cursor: pointer;
+        white-space: nowrap; position: relative;
         transition: color var(--transition), background var(--transition);
-        border: none; background: none;
-        width: 100%; text-align: left;
+        border: none; background: none; width: 100%; text-align: left;
         font-family: 'DM Sans', sans-serif;
     }
 
-    .sb-nav-link:hover {
-        background: var(--sb-hover);
-        color: #ffffff;
-        text-decoration: none;
-    }
+    .sb-nav-link:hover { background: var(--sb-hover); color: #fff; text-decoration: none; }
 
-    .sb-nav-link.active {
-        background: var(--sb-active-bg);
-        color: #ffffff;
-    }
+    .sb-nav-link.active { background: var(--sb-active-bg); color: #fff; }
 
     .sb-nav-link.active::before {
-        content: '';
-        position: absolute; left: 0; top: 4px; bottom: 4px;
-        width: 3px;
-        background: var(--sb-active-line);
-        border-radius: 0 3px 3px 0;
+        content: ''; position: absolute; left: 0; top: 5px; bottom: 5px;
+        width: 3px; background: var(--sb-active-line); border-radius: 0 3px 3px 0;
     }
 
+    /* ── Icon — fixed width, same on all levels ── */
     .sb-nav-icon {
-        width: 20px; text-align: center;
-        font-size: 15px; flex-shrink: 0;
+        width: 22px; min-width: 22px;
+        text-align: center; font-size: 15px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
     }
 
-    /* .sb-nav-label {
-        font-size: 0.845rem; font-weight: 500;
-        flex: 1;
-        transition: opacity var(--transition);
-    } */
-
-    /* cmtan AFTER — adjust font-size to your preference */
+    /* ── Label ──────────────────────────────── */
     .sb-nav-label {
-        font-size: 0.9rem; /* ← change this: 0.8rem=smaller, 1rem=normal, 1.1rem=larger */
-        font-weight: 500;
-        color: inherit; /* ← inherits from parent sb-nav-link */
-        flex: 1;
+        font-size: 0.9rem; font-weight: 500;
+        flex: 1; color: inherit;
         transition: opacity var(--transition);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    body.sidebar-collapsed .sb-nav-label,
-    body.sidebar-collapsed .sb-badge,
-    body.sidebar-collapsed .sb-chevron { opacity: 0; width: 0; overflow: hidden; }
-
-    /* Badges */
-    .sb-badge {
-        font-size: 0.6rem; font-weight: 700;
-        padding: 2px 7px; border-radius: 20px;
-        color: #fff; line-height: 1.5;
-        transition: opacity var(--transition);
-    }
-
+    /* ── Badges ─────────────────────────────── */
+    .sb-badge { font-size: 0.6rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; color: #fff; line-height: 1.5; transition: opacity var(--transition); flex-shrink: 0; }
     .sb-badge.badge-blue   { background: var(--accent-lt); }
     .sb-badge.badge-orange { background: var(--gold); }
     .sb-badge.badge-red    { background: var(--clr-danger); }
 
-    .sb-chevron {
-        font-size: 10px; color: var(--sb-text-header);
-        transition: transform 0.2s, opacity var(--transition);
-    }
-
+    /* ── Chevron ─────────────────────────────── */
+    .sb-chevron { font-size: 10px; color: var(--sb-text-header); transition: transform 0.2s, opacity var(--transition); flex-shrink: 0; }
     .sb-nav-link[aria-expanded="true"] .sb-chevron { transform: rotate(90deg); }
 
-    /* Submenu */
+    /* ── Collapsed state ─────────────────────── */
+    body.sidebar-collapsed .sb-nav-label,
+    body.sidebar-collapsed .sb-badge,
+    body.sidebar-collapsed .sb-chevron { opacity: 0; width: 0; overflow: hidden; pointer-events: none; }
+    body.sidebar-collapsed .sb-nav-link { justify-content: center; padding: 10px; }
+    body.sidebar-collapsed .sb-nav-icon { width: auto; font-size: 17px; }
+    body.sidebar-collapsed .sb-submenu  { display: none !important; }
+
+    /* ══════════════════════════════════════════
+       SUBMENU STYLES — FIXED
+    ══════════════════════════════════════════ */
+
     .sb-submenu {
         list-style: none;
         background: var(--sb-bg-deep);
         overflow: hidden;
+        margin: 0;
+        padding: 2px 0;
+        border-left: 2px solid rgba(255,255,255,0.07);
+        margin-left: 27px;
     }
 
-    .sb-submenu .sb-nav-link {
-        padding: 8px 17px 8px 48px;
-        font-size: 0.8rem;
-        color: var(--sb-text);
-    }
+        /* Submenu item link */
+        .sb-submenu .sb-nav-link {
+            padding: 8px 17px 8px 12px; /* ← left padding for icon breathing room */
+            font-size: 0.84rem;
+            opacity: 0.88;
+            gap: 10px;
+        }
 
-    .sb-submenu .sb-nav-link::before { display: none; }
+            .sb-submenu .sb-nav-link:hover {
+                opacity: 1;
+                color: #fff;
+            }
 
-    .sb-submenu .sb-nav-link.active,
-    .sb-submenu .sb-nav-link:hover  { color: #ffffff; }
+            .sb-submenu .sb-nav-link.active {
+                opacity: 1;
+                background: rgba(255,255,255,0.08);
+            }
 
-    /* Collapsed tooltip */
-    body.sidebar-collapsed .sb-nav-link { justify-content: center; }
-    body.sidebar-collapsed .sb-nav-icon { width: auto; }
+                .sb-submenu .sb-nav-link.active::before {
+                    display: none;
+                }
 
+        /* ── Submenu icon — FIXED: force always visible ── */
+        .sb-submenu .sb-nav-icon {
+            font-size: 13px;
+            opacity: 0.75;
+            color: var(--sb-text);
+            width: 18px !important; /* ← never collapse to 0 */
+            min-width: 18px !important; /* ← never collapse to 0 */
+            display: flex !important; /* ← always show */
+            flex-shrink: 0 !important;
+            visibility: visible !important;
+        }
+
+        .sb-submenu .sb-nav-link:hover .sb-nav-icon,
+        .sb-submenu .sb-nav-link.active .sb-nav-icon {
+            opacity: 1;
+            color: var(--sb-active-line);
+        }
+
+        /* Submenu label */
+        .sb-submenu .sb-nav-label {
+            font-size: 0.835rem;
+            font-weight: 400;
+            padding-left: 2px;
+        }
+
+        .sb-submenu .sb-nav-link.active .sb-nav-label {
+            font-weight: 600;
+        }
+
+    /* ── Collapsed tooltip ───────────────────── */
+    body.sidebar-collapsed .sb-nav-link[data-tooltip] { position: relative; }
     body.sidebar-collapsed .sb-nav-link[data-tooltip]:hover::after {
         content: attr(data-tooltip);
-        position: absolute;
-        left: calc(var(--sidebar-w-collapsed) + 10px);
+        position: absolute; left: calc(var(--sidebar-w-collapsed) + 10px);
         top: 50%; transform: translateY(-50%);
         background: #1e293b; color: #fff;
-        padding: 5px 11px; border-radius: 6px;
+        padding: 5px 12px; border-radius: 7px;
         font-size: 0.78rem; white-space: nowrap;
         z-index: 9999; pointer-events: none;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         font-family: 'DM Sans', sans-serif;
+        /* clear the submenu connector override */
+        border-left: none; margin-left: 0;
     }
 
-    /* Sidebar bottom */
-    .sb-footer-nav {
-        padding: 10px 0 6px;
-        border-top: 1px solid var(--sb-border);
-        flex-shrink: 0;
+    /* ── Sidebar footer ──────────────────────── */
+    .sb-footer-nav { padding: 8px 0 6px; border-top: 1px solid var(--sb-border); flex-shrink: 0; }
+
+    /* ── Mobile ──────────────────────────────── */
+    @@media (max-width: 768px) {
+        #sidebar { width: var(--sidebar-w) !important; transform: translateX(-100%); transition: transform var(--transition); z-index: 1050; box-shadow: 4px 0 24px rgba(0,0,0,0.35); }
+        body.mobile-open #sidebar { transform: translateX(0); }
+        body.mobile-open .sb-brand-text,
+        body.mobile-open .sb-nav-label,
+        body.mobile-open .sb-badge,
+        body.mobile-open .sb-chevron,
+        body.mobile-open .sb-section-title { opacity: 1 !important; width: auto !important; overflow: visible !important; }
+        body.mobile-open .sb-nav-link { justify-content: flex-start !important; padding: 10px 17px !important; }
+        body.mobile-open .sb-nav-icon { font-size: 15px !important; width: 22px !important; }
+        body.mobile-open .sb-submenu  { display: block !important; }
     }
 </style>
 
@@ -238,27 +218,17 @@
 
     @* ── Brand ── *@
     <a class="sb-brand" href="/Home/Index">
-        <div class="sb-brand-icon">
-            <i class="bi bi-truck"></i>
-        </div>
+        <div class="sb-brand-icon"><i class="bi bi-truck"></i></div>
         <div class="sb-brand-text">
             <div class="sb-brand-name">PTC IGH System</div>
             <div class="sb-brand-sub">Integrated Gate House</div>
         </div>
     </a>
 
-    @* ── User Profile ── *@
-   @*  <div class="sb-profile">
-        <div class="sb-avatar js-user-init">--</div>
-        <div class="sb-profile-info">
-            <div class="sb-profile-name js-user-name">Loading...</div>
-            <div class="sb-profile-role">System User</div>
-        </div>
-    </div> *@
-
-    @* ── Navigation Links ── *@
+    @* ── Navigation ── *@
     <div class="sb-nav">
         <ul>
+
             @* MAIN *@
             <li class="sb-section-title">Main</li>
             <li>
@@ -271,29 +241,25 @@
             @* GATE OPERATIONS *@
             <li class="sb-section-title">Gate Operations</li>
             <li>
-                <button class="sb-nav-link" data-bs-toggle="collapse"
-                        data-bs-target="#menuGateIn" aria-expanded="false"
-                        data-tooltip="Gate In">
+                <button class="sb-nav-link" data-bs-toggle="collapse" data-bs-target="#menuGateIn" aria-expanded="false" data-tooltip="Gate In">
                     <span class="sb-nav-icon"><i class="bi bi-box-arrow-in-right"></i></span>
                     <span class="sb-nav-label">Gate In</span>
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
                 <ul class="collapse sb-submenu" id="menuGateIn">
-                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-label">New Gate Entry</span></a></li>
-                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-label">Gate In List</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-plus-circle"></i></span><span class="sb-nav-label">New Gate Entry</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-list-ul"></i></span><span class="sb-nav-label">Gate In List</span></a></li>
                 </ul>
             </li>
             <li>
-                <button class="sb-nav-link" data-bs-toggle="collapse"
-                        data-bs-target="#menuGateOut" aria-expanded="false"
-                        data-tooltip="Gate Out">
+                <button class="sb-nav-link" data-bs-toggle="collapse" data-bs-target="#menuGateOut" aria-expanded="false" data-tooltip="Gate Out">
                     <span class="sb-nav-icon"><i class="bi bi-box-arrow-right"></i></span>
                     <span class="sb-nav-label">Gate Out</span>
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
                 <ul class="collapse sb-submenu" id="menuGateOut">
-                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-label">New Gate Exit</span></a></li>
-                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-label">Gate Out List</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-plus-circle"></i></span><span class="sb-nav-label">New Gate Exit</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-list-ul"></i></span><span class="sb-nav-label">Gate Out List</span></a></li>
                 </ul>
             </li>
             <li>
@@ -307,57 +273,72 @@
             @* DELIVERY *@
             <li class="sb-section-title">Delivery</li>
             <li>
-                <button class="sb-nav-link" data-bs-toggle="collapse"
-                        data-bs-target="#menuDelivery" aria-expanded="false"
-                        data-tooltip="Delivery Orders">
+                <button class="sb-nav-link" data-bs-toggle="collapse" data-bs-target="#menuDelivery" aria-expanded="false" data-tooltip="Delivery Orders">
                     <span class="sb-nav-icon"><i class="bi bi-truck"></i></span>
                     <span class="sb-nav-label">Delivery Orders</span>
                     <span class="sb-badge badge-blue">12</span>
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
                 <ul class="collapse sb-submenu" id="menuDelivery">
-                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-label">Create Order</span></a></li>
-                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-label">Order List</span></a></li>
-                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-label">Track Shipment</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-file-earmark-plus"></i></span><span class="sb-nav-label">Create Order</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-card-list"></i></span><span class="sb-nav-label">Order List</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-geo-alt"></i></span><span class="sb-nav-label">Track Shipment</span></a></li>
                 </ul>
             </li>
             <li>
-                <a class="sb-nav-link" href="#" data-tooltip="Driver Management">
+                <button class="sb-nav-link" data-bs-toggle="collapse" data-bs-target="#menuDriver" aria-expanded="false" data-tooltip="Driver Management">
                     <span class="sb-nav-icon"><i class="bi bi-person-badge"></i></span>
                     <span class="sb-nav-label">Driver Management</span>
-                </a>
+                    <i class="bi bi-chevron-right sb-chevron"></i>
+                </button>
+                <ul class="collapse sb-submenu" id="menuDriver">
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-person-plus"></i></span><span class="sb-nav-label">Register Driver</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-people"></i></span><span class="sb-nav-label">Driver List</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-card-checklist"></i></span><span class="sb-nav-label">Driver Attendance</span></a></li>
+                </ul>
             </li>
             <li>
-                <a class="sb-nav-link" href="#" data-tooltip="Vehicle Fleet">
+                <button class="sb-nav-link" data-bs-toggle="collapse" data-bs-target="#menuFleet" aria-expanded="false" data-tooltip="Vehicle Fleet">
                     <span class="sb-nav-icon"><i class="bi bi-car-front"></i></span>
                     <span class="sb-nav-label">Vehicle Fleet</span>
-                </a>
+                    <i class="bi bi-chevron-right sb-chevron"></i>
+                </button>
+                <ul class="collapse sb-submenu" id="menuFleet">
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-plus-square"></i></span><span class="sb-nav-label">Add Vehicle</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-truck-front"></i></span><span class="sb-nav-label">Fleet List</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-wrench-adjustable"></i></span><span class="sb-nav-label">Maintenance</span></a></li>
+                </ul>
             </li>
 
             @* REPORTS *@
             <li class="sb-section-title">Reports</li>
             <li>
-                <button class="sb-nav-link" data-bs-toggle="collapse"
-                        data-bs-target="#menuReports" aria-expanded="false"
-                        data-tooltip="Reports">
+                <button class="sb-nav-link" data-bs-toggle="collapse" data-bs-target="#menuReports" aria-expanded="false" data-tooltip="Reports">
                     <span class="sb-nav-icon"><i class="bi bi-bar-chart-line"></i></span>
                     <span class="sb-nav-label">Reports</span>
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
                 <ul class="collapse sb-submenu" id="menuReports">
-                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-label">Daily Summary</span></a></li>
-                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-label">Monthly Report</span></a></li>
-                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-label">Gate Activity</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-calendar-day"></i></span><span class="sb-nav-label">Daily Summary</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-calendar-month"></i></span><span class="sb-nav-label">Monthly Report</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-gate"></i></span><span class="sb-nav-label">Gate Activity</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-download"></i></span><span class="sb-nav-label">Export Reports</span></a></li>
                 </ul>
             </li>
 
             @* SYSTEM *@
             <li class="sb-section-title">System</li>
             <li>
-                <a class="sb-nav-link" href="#" data-tooltip="User Management">
+                <button class="sb-nav-link" data-bs-toggle="collapse" data-bs-target="#menuUsers" aria-expanded="false" data-tooltip="User Management">
                     <span class="sb-nav-icon"><i class="bi bi-people"></i></span>
                     <span class="sb-nav-label">User Management</span>
-                </a>
+                    <i class="bi bi-chevron-right sb-chevron"></i>
+                </button>
+                <ul class="collapse sb-submenu" id="menuUsers">
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-person-plus-fill"></i></span><span class="sb-nav-label">Add User</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-person-lines-fill"></i></span><span class="sb-nav-label">User List</span></a></li>
+                    <li><a class="sb-nav-link" href="#"><span class="sb-nav-icon"><i class="bi bi-shield-check"></i></span><span class="sb-nav-label">Roles & Permissions</span></a></li>
+                </ul>
             </li>
             <li>
                 <a class="sb-nav-link" href="#" data-tooltip="Settings">
@@ -371,12 +352,14 @@
                     <span class="sb-nav-label">Audit Log</span>
                 </a>
             </li>
+
         </ul>
     </div>
 
     @* ── Sign Out ── *@
     <div class="sb-footer-nav">
-        <button class="sb-nav-link" onclick="PTC.confirmLogout()" data-tooltip="Sign Out">
+        <button class="sb-nav-link" data-tooltip="Sign Out"
+                onclick="KSwal.confirm('Sign Out?','You will be signed out of the PTC IGH System.',function(){ document.getElementById(\'logoutForm\').submit(); })">
             <span class="sb-nav-icon"><i class="bi bi-box-arrow-left"></i></span>
             <span class="sb-nav-label">Sign Out</span>
         </button>
