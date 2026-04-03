@@ -292,12 +292,14 @@ $(function () {
     });
 
     $('#btnKSwalToast').on('click', function () {
+       
         KSwal.toast('success', 'Record saved!');
         setTimeout(function () { KSwal.toast('info', 'Email notification sent.'); }, 1400);
     });
 
     /* ── Kendo Form Window ── */
     $('#btnKendoForm').on('click', function () {
+        alert('456');
         if ($('#quickEntryWin').length) {
             $('#quickEntryWin').data('kendoWindow').center().open(); return;
         }
