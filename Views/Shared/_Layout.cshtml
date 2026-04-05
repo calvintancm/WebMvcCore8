@@ -21,17 +21,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" />
 
-    @* Kendo 2018.2.516 — local CSS *@
-    <link rel="stylesheet" href="~/lib/kendo/2018.2.516/styles/kendo.common.min.css" />
-    <link rel="stylesheet" href="~/lib/kendo/2018.2.516/styles/kendo.default.min.css" />
+    @* cmtan Kendo 2019.1.220 — local CSS *@
+   @*  <link rel="stylesheet" href="~/lib/kendo/2019.1.220/styles/kendo.common.min.css" />
+    <link rel="stylesheet" href="~/lib/kendo/2019.1.220/styles/kendo.default.min.css" />
+    <script src="~/lib/kendo/2019.1.220/kendo.all.min.js"></script> *@
+   
 
+    <link rel="stylesheet" href="~/lib/kendo/2019.1.220/styles/kendo.common.min.css" />
+    <link rel="stylesheet" href="~/lib/kendo/2019.1.220/styles/kendo.default.min.css" />
+    
     @* Kendo icon font — CDN fallback so icons load even without local font files *@
     <style>
         @@font-face {
             font-family: "WebComponentsIcons";
-            src: url("https://kendo.cdn.telerik.com/2018.2.516/styles/fonts/glyphs/WebComponentsIcons.woff2") format("woff2"),
-                 url("https://kendo.cdn.telerik.com/2018.2.516/styles/fonts/glyphs/WebComponentsIcons.woff") format("woff"),
-                 url("https://kendo.cdn.telerik.com/2018.2.516/styles/fonts/glyphs/WebComponentsIcons.ttf") format("truetype");
+            src: url("https://kendo.cdn.telerik.com/2019.1.220/styles/fonts/glyphs/WebComponentsIcons.woff2") format("woff2"),
+                 url("https://kendo.cdn.telerik.com/2019.1.220/styles/fonts/glyphs/WebComponentsIcons.woff") format("woff"),
+                 url("https://kendo.cdn.telerik.com/2019.1.220/styles/fonts/glyphs/WebComponentsIcons.ttf") format("truetype");
             font-weight: normal; font-style: normal;
         }
     </style>
@@ -239,9 +244,9 @@
     @* ── SCRIPTS — load order matters ── *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script src="~/lib/kendo/2018.2.516/js/kendo.all.min.js"></script>
+  
+    <script src="~/lib/kendo/2019.1.220/kendo.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
-    @* <script src="~/js/sweetalert-kendo.js"></script> *@
     <script src="~/js/sweetalert-kendo.js?v=@DateTime.Now.Ticks"></script>
 
 

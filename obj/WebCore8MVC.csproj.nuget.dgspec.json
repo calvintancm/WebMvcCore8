@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\PTC\\EDPUnity\\ptc_WebCore8MvcTemplate\\WebCore8MVC.csproj": {}
+    "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\WebCore8MVC.csproj": {}
   },
   "projects": {
-    "C:\\PTC\\EDPUnity\\ptc_WebCore8MvcTemplate\\WebCore8MVC.csproj": {
+    "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\WebCore8MVC.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\PTC\\EDPUnity\\ptc_WebCore8MvcTemplate\\WebCore8MVC.csproj",
+        "projectUniqueName": "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\WebCore8MVC.csproj",
         "projectName": "WebCore8MVC",
-        "projectPath": "C:\\PTC\\EDPUnity\\ptc_WebCore8MvcTemplate\\WebCore8MVC.csproj",
+        "projectPath": "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\WebCore8MVC.csproj",
         "packagesPath": "C:\\Users\\calvin.tan\\.nuget\\packages\\",
-        "outputPath": "C:\\PTC\\EDPUnity\\ptc_WebCore8MvcTemplate\\obj\\",
+        "outputPath": "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

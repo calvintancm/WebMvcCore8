@@ -1,0 +1,148 @@
+﻿@model IEnumerable<ptc_IGH_Sys.ViewModels.IGH.LeaveTransactionViewModel>
+@{
+    ViewBag.Title = "Leave Transaction";
+}
+
+<div class="m-portlet m-portlet--mobile mb-0">
+    <div class="m-portlet__head">
+        <div class="m-portlet__head-caption">
+            <div class="m-portlet__head-title">
+                <h3 class="m-portlet__head-text">
+                    Leave Transaction Management
+                    <small>Driver Leave Records</small>
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="m-portlet__body" style="min-height:73vh;">
+        <div class="form-row align-items-center">
+            <div class="col-auto">
+                <label for="queryLeaveMonth" class="mb-0">Select Month</label>
+            </div>
+            <div class="col-md-2">
+                @(Html.Kendo().DropDownList()
+                .Name("queryLeaveMonth")
+                .OptionLabel("Select Month...")
+                .DataTextField("Text")
+                .DataValueField("Value")
+                .BindTo(new[]
+                {
+                    new { Text = "Jan", Value = 1 },
+                    new { Text = "Feb", Value = 2 },
+                    new { Text = "Mar", Value = 3 },
+                    new { Text = "Apr", Value = 4 },
+                    new { Text = "May", Value = 5 },
+                    new { Text = "Jun", Value = 6 },
+                    new { Text = "Jul", Value = 7 },
+                    new { Text = "Aug", Value = 8 },
+                    new { Text = "Sep", Value = 9 },
+                    new { Text = "Oct", Value = 10 },
+                    new { Text = "Nov", Value = 11 },
+                    new { Text = "Dec", Value = 12 }
+                })
+                .Events(e => e.Change("refreshLeaveGrid"))
+            )
+            </div>
+            <div class="col-auto">
+                <label for="queryDriverName" class="mb-0">Driver Name</label>
+            </div>
+            <div class="col-md-3">
+                <input type="text" id="queryDriverName" class="form-control" placeholder="Search driver name..." />
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-primary btn-block" onclick="refreshLeaveGrid()">
+                    <i class="fa fa-search"></i> Search
+                </button>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-secondary btn-block" onclick="clearLeaveFilters()">
+                    <i class="fa fa-times"></i> Clear
+                </button>
+            </div>
+        </div><br />
+
+        @(Html.Kendo().Grid<ptc_IGH_Sys.ViewModels.IGH.LeaveTransactionViewModel>()
+            .Name("leave_grid")
+            .Columns(columns =>
+            {
+                columns.Bound(c => c.Id).Hidden();
+                columns.Bound(c => c.DriverName).Title("Driver Name").Width(250);
+                columns.Bound(c => c.LeaveDate).Title("Leave Date").Width(150).Format("{0:dd-MMM-yyyy}");
+                columns.Bound(c => c.LeaveCount).Title("Leave Count").Width(100);
+                columns.Bound(c => c.LeaveType).Title("Leave Type").Width(150);
+                columns.Bound(c => c.LeaveMonth)
+                    .Title("Leave Month")
+                    .Width(120)
+                    .ClientTemplate("#= kendo.toString(new Date(2000, LeaveMonth - 1, 1), 'MMM') #");
+                columns.Bound(c => c.Remarks).Width(250);
+                columns.Bound(c => c.CreatedAt).Title("Created At").Width(150).Format("{0:dd-MMM-yyyy HH:mm}");
+                columns.Command(command => { command.Edit(); }).Width(150);
+            })
+            .Editable(ed => ed.Mode(GridEditMode.InLine))
+            .Scrollable()
+            .Sortable()
+            .HtmlAttributes(new { style = "height: 60vh" })
+            .Pageable(p => p.Refresh(true).PageSizes(true).ButtonCount(5))
+            .DataSource(ds => ds.Ajax()
+                .Model(m =>
+                {
+                    m.Id(p => p.Id);
+                    m.Field(p => p.DriverName).Editable(false);
+                    m.Field(p => p.CreatedAt).Editable(false);
+                })
+                .Read(r => r.Action("LeaveTransactionRead", "IGH")
+                            .Type(HttpVerbs.Post)
+                            .Data("additionalLeaveInfos"))
+                .Update(u => u.Action("LeaveTransactionUpdate", "IGH").Type(HttpVerbs.Post))
+                .Events(e => e.Error("custom_error_handler"))
+                .PageSize(100)
+                .Sort(s => s.Add(p => p.DriverName).Ascending())
+            )
+        )
+    </div>
+</div>
+
+<script>
+
+ 
+    kendo.culture("en-GB");  // or your preferred culture
+
+    function additionalLeaveInfos() {
+        return {
+            leaveMonth: $("#queryLeaveMonth").val(),
+            driverName: $("#queryDriverName").val()
+        };
+    }
+
+    function refreshLeaveGrid() {
+        $("#leave_grid").data("kendoGrid").dataSource.read();
+        $("#leave_grid").data("kendoGrid").refresh();
+    }
+
+    function clearLeaveFilters() {
+        $("#queryLeaveMonth").data("kendoDropDownList").value("");
+        $("#queryDriverName").val("");
+        refreshLeaveGrid();
+    }
+
+    // Allow Enter key to trigger search in driver name input
+    $(document).ready(function () {
+        $("#queryDriverName").keypress(function (e) {
+            if (e.which == 13) { // Enter key
+                refreshLeaveGrid();
+            }
+        });
+    });
+
+    function custom_error_handler(e) {
+        if (e.errors) {
+            var message = "";
+            $.each(e.errors, function (key, value) {
+                if (value.errors) {
+                    message += value.errors.join("\n");
+                }
+            });
+            alert("Error:\n" + message);
+        }
+    }
+</script>

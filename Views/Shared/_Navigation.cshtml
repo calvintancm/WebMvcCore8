@@ -345,70 +345,61 @@
                 </a>
             </li>
 
-            @* GATE OPERATIONS *@
-            <li class="sb-section-title">Gate Operations</li>
+            @* Attendance & Leave *@
+            <li class="sb-section-title">Data Management</li>
             <li>
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuGateIn" aria-expanded="false"
                         data-ptc-tooltip="Gate In">
                     <span class="sb-nav-icon"><i class="bi bi-box-arrow-in-right"></i></span>
-                    <span class="sb-nav-label">Gate In</span>
+                    <span class="sb-nav-label">Sync Data</span>
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
                 <ul class="collapse sb-submenu" id="menuGateIn">
                     <li>
                         <a class="sb-nav-link" href="#">
                             <span class="sb-nav-icon"><i class="bi bi-plus-circle"></i></span>
-                            <span class="sb-nav-label">New Gate Entry</span>
+                            <span class="sb-nav-label">Import Trip Data</span>
                         </a>
                     </li>
-                    <li>
-                        <a class="sb-nav-link" href="#">
-                            <span class="sb-nav-icon"><i class="bi bi-list-ul"></i></span>
-                            <span class="sb-nav-label">Gate In List</span>
-                        </a>
-                    </li>
+                   
                 </ul>
-            </li>
+            </li> 
+
             <li>
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuGateOut" aria-expanded="false"
-                        data-ptc-tooltip="Gate Out">
+                        data-ptc-tooltip="Payroll">
                     <span class="sb-nav-icon"><i class="bi bi-box-arrow-right"></i></span>
-                    <span class="sb-nav-label">Gate Out</span>
+                    <span class="sb-nav-label">Payroll Processing</span>
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
                 <ul class="collapse sb-submenu" id="menuGateOut">
                     <li>
                         <a class="sb-nav-link" href="#">
                             <span class="sb-nav-icon"><i class="bi bi-plus-circle"></i></span>
-                            <span class="sb-nav-label">New Gate Exit</span>
+                            <span class="sb-nav-label">Salary Adjustments</span>
                         </a>
                     </li>
-                    <li>
-                        <a class="sb-nav-link" href="#">
-                            <span class="sb-nav-icon"><i class="bi bi-list-ul"></i></span>
-                            <span class="sb-nav-label">Gate Out List</span>
-                        </a>
-                    </li>
+                   
                 </ul>
             </li>
             <li>
                 <a class="sb-nav-link" href="#" data-ptc-tooltip="Vehicle Check">
                     <span class="sb-nav-icon"><i class="bi bi-clipboard2-check"></i></span>
-                    <span class="sb-nav-label">Vehicle Check</span>
+                    <span class="sb-nav-label">Vehicle</span>
                     <span class="sb-badge badge-orange">3</span>
                 </a>
             </li>
 
-            @* DELIVERY *@
-            <li class="sb-section-title">Delivery</li>
+           @*  DELIVERY 
+            <li class="sb-section-title">Master</li>
             <li>
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuDelivery" aria-expanded="false"
                         data-ptc-tooltip="Delivery Orders">
                     <span class="sb-nav-icon"><i class="bi bi-truck"></i></span>
-                    <span class="sb-nav-label">Delivery Orders</span>
+                    <span class="sb-nav-label">Master</span>
                     <span class="sb-badge badge-blue">12</span>
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
@@ -416,13 +407,13 @@
                     <li>
                         <a class="sb-nav-link" href="#">
                             <span class="sb-nav-icon"><i class="bi bi-file-earmark-plus"></i></span>
-                            <span class="sb-nav-label">Create Order</span>
+                            <span class="sb-nav-label">Drivers List</span>
                         </a>
                     </li>
                     <li>
                         <a class="sb-nav-link" href="#">
                             <span class="sb-nav-icon"><i class="bi bi-card-list"></i></span>
-                            <span class="sb-nav-label">Order List</span>
+                            <span class="sb-nav-label">Driver Pass</span>
                         </a>
                     </li>
                     <li>
@@ -432,7 +423,8 @@
                         </a>
                     </li>
                 </ul>
-            </li>
+            </li> *@
+
             <li>
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuDriver" aria-expanded="false"
@@ -442,12 +434,7 @@
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
                 <ul class="collapse sb-submenu" id="menuDriver">
-                    <li>
-                        <a class="sb-nav-link" href="#">
-                            <span class="sb-nav-icon"><i class="bi bi-person-plus"></i></span>
-                            <span class="sb-nav-label">Register Driver</span>
-                        </a>
-                    </li>
+                   
                     <li>
                         <a class="sb-nav-link" href="#">
                             <span class="sb-nav-icon"><i class="bi bi-people"></i></span>
@@ -462,7 +449,8 @@
                     </li>
                 </ul>
             </li>
-            <li>
+
+            @* <li>
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuFleet" aria-expanded="false"
                         data-ptc-tooltip="Vehicle Fleet">
@@ -490,7 +478,7 @@
                         </a>
                     </li>
                 </ul>
-            </li>
+            </li> *@
 
             @* REPORTS *@
             <li class="sb-section-title">Reports</li>
@@ -531,7 +519,7 @@
             </li>
 
             @* SYSTEM *@
-            <li class="sb-section-title">System</li>
+            @* <li class="sb-section-title">System</li>
             <li>
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuUsers" aria-expanded="false"
@@ -560,7 +548,7 @@
                         </a>
                     </li>
                 </ul>
-            </li>
+            </li> *@
             <li>
                 <a class="sb-nav-link" href="#" data-ptc-tooltip="Settings">
                     <span class="sb-nav-icon"><i class="bi bi-gear"></i></span>

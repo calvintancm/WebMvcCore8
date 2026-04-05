@@ -1,0 +1,270 @@
+﻿@* ═══════════════════════════════════════════════════════
+   SalaryAdjustment — Pure JavaScript Kendo Grid
+   No tag helpers. Matches LeaveTransaction pattern.
+═══════════════════════════════════════════════════════ *@
+
+@* ── Salary Adjustment Grid Card ── *@
+<div class="ptc-card">
+    <div class="ptc-card-header">
+        <h2 class="ptc-card-title">
+            <i class="bi bi-currency-exchange"></i>
+            Salary Adjustment Records
+        </h2>
+        <span id="salaryRecordCount"
+              style="font-size:0.75rem;color:var(--text-muted);background:#f1f5f9;
+                     padding:3px 10px;border-radius:20px;">0 records</span>
+    </div>
+    <div class="ptc-card-body" style="padding:0;">
+        <div id="salary_adjustment_grid"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+
+            kendo.culture('en-GB');
+
+            // ══════════════════════════════════════════
+            //  KENDO GRID — Salary Adjustment
+            // ══════════════════════════════════════════
+            $('#salary_adjustment_grid').kendoGrid({
+
+                dataSource: {
+                    type: 'json',
+                    transport: {
+                        read: {
+                            url:         '@Url.Action("SalaryAdjustmentRead", "IGH")',
+                            type:        'POST',
+                            contentType: 'application/json',
+                            data:        additionalSalaryInfos    // ← filter function (define below)
+                        },
+                        update: {
+                            url:         '@Url.Action("SalaryAdjustmentUpdate", "IGH")',
+                            type:        'POST',
+                            contentType: 'application/json'
+                        },
+                        parameterMap: function (data, operation) {
+                            return JSON.stringify(data);
+                        }
+                    },
+                    schema: {
+                        data:   'Data',
+                        total:  'Total',
+                        errors: 'Errors',
+                        model: {
+                            id: 'Id',
+                            fields: {
+                                Id:               { type: 'number', editable: false },
+                                DriverName:       { type: 'string', editable: false },
+                                AdjustmentDate:   { type: 'date'   },
+                                AdjustmentMonth:  { type: 'number', editable: false },
+                                AdjustmentType:   { type: 'string' },
+                                AdjustmentAmount: { type: 'number', validation: { required: true } },
+                                Remarks:          { type: 'string' },
+                                CreatedAt:        { type: 'date',   editable: false }
+                            }
+                        }
+                    },
+                    pageSize:      100,
+                    serverPaging:  true,
+                    serverSorting: true,
+                    sort: { field: 'DriverName', dir: 'asc' },
+
+                    requestEnd: function (e) {
+                        if (e.type === 'read' && e.response) {
+                            var total = e.response.Total || 0;
+                            $('#salaryRecordCount').text(total + ' record' + (total !== 1 ? 's' : ''));
+                        }
+                    },
+
+                    error: function (e) {
+                        salaryGridErrorHandler(e);
+                    }
+                },
+
+                columns: [
+                    { field: 'Id', hidden: true },
+
+                    {
+                        field: 'DriverName', title: 'Driver Name', width: 220,
+                        template: '<span style="font-weight:600;">#: DriverName #</span>'
+                    },
+
+                    {
+                        field: 'AdjustmentDate', title: 'Adjustment Date', width: 150,
+                        format: '{0:dd-MMM-yyyy}',
+                        template: function (d) {
+                            if (!d.AdjustmentDate) return '';
+                            var dt = kendo.parseDate(d.AdjustmentDate);
+                            return '<span style="font-family:\'Sora\',sans-serif;font-size:0.8rem;">'
+                                 + kendo.toString(dt, 'dd-MMM-yyyy') + '</span>';
+                        }
+                    },
+
+                    {
+                        // Replaces: client-template="#= kendo.toString(new Date(2000, AdjustmentMonth-1,1),'MMM') #"
+                        field: 'AdjustmentMonth', title: 'Month', width: 100,
+                        template: function (d) {
+                            if (!d.AdjustmentMonth) return '';
+                            return kendo.toString(new Date(2000, d.AdjustmentMonth - 1, 1), 'MMM');
+                        },
+                        attributes:       { style: 'text-align:center;' },
+                        headerAttributes: { style: 'text-align:center;' }
+                    },
+
+                    {
+                        field: 'AdjustmentType', title: 'Adjustment Type', width: 150,
+                        template: function (d) {
+                            if (!d.AdjustmentType) return '';
+                            // Colour-code common adjustment types
+                            var colors = {
+                                'BONUS':     ['#dcfce7', '#15803d'],
+                                'DEDUCTION': ['#fee2e2', '#dc2626'],
+                                'OVERTIME':  ['#dbeafe', '#1d4ed8'],
+                                'ALLOWANCE': ['#fef3c7', '#92400e'],
+                                'PENALTY':   ['#ffe4e6', '#be123c']
+                            };
+                            var key = d.AdjustmentType.toUpperCase();
+                            var c   = colors[key] || ['#f1f5f9', '#475569'];
+                            return '<span style="background:' + c[0] + ';color:' + c[1]
+                                 + ';font-size:0.7rem;font-weight:700;padding:2px 9px;'
+                                 + 'border-radius:20px;">' + d.AdjustmentType + '</span>';
+                        }
+                    },
+
+                    {
+                        field: 'AdjustmentAmount', title: 'Amount', width: 130,
+                        format: '{0:N2}',
+                        template: function (d) {
+                            if (d.AdjustmentAmount == null) return '';
+                            var color = d.AdjustmentAmount >= 0
+                                ? 'var(--clr-success)'
+                                : 'var(--clr-danger)';
+                            return '<span style="font-weight:700;color:' + color + ';'
+                                 + 'font-family:\'Sora\',sans-serif;font-size:0.85rem;">'
+                                 + kendo.toString(d.AdjustmentAmount, 'N2') + '</span>';
+                        },
+                        attributes:       { style: 'text-align:right;' },
+                        headerAttributes: { style: 'text-align:right;' }
+                    },
+
+                    {
+                        field: 'Remarks', title: 'Remarks', width: 220,
+                        template: '<span style="color:var(--text-secondary);font-size:0.82rem;">'
+                                + '#: Remarks || \'\' #</span>'
+                    },
+
+                    {
+                        field: 'CreatedAt', title: 'Created At', width: 150,
+                        format: '{0:dd-MMM-yyyy HH:mm}',
+                        template: function (d) {
+                            if (!d.CreatedAt) return '';
+                            var dt = kendo.parseDate(d.CreatedAt);
+                            return '<span style="font-size:0.78rem;color:var(--text-muted);">'
+                                 + kendo.toString(dt, 'dd-MMM-yyyy HH:mm') + '</span>';
+                        }
+                    },
+
+                    {
+                        command: [
+                            {
+                                name: 'edit',
+                                text: {
+                                    edit:   ' Edit',
+                                    update: ' Save',
+                                    cancel: ' Cancel'
+                                },
+                                iconClass: {
+                                    edit:   'k-icon k-i-edit',
+                                    update: 'k-icon k-i-check',
+                                    cancel: 'k-icon k-i-cancel'
+                                }
+                            }
+                        ],
+                        title: 'Action', width: 160
+                    }
+                ],
+
+                editable: 'inline',
+
+                pageable: {
+                    pageSize:    100,
+                    pageSizes:   [25, 50, 100],
+                    buttonCount: 5,
+                    info:        true,
+                    messages: {
+                        display:      '{0}-{1} of {2} records',
+                        itemsPerPage: 'per page'
+                    }
+                },
+
+                sortable:   true,
+                scrollable: true,
+                height:     520,
+
+                /* Style header to match site theme */
+                dataBound: function () {
+                    this.thead.find('th').css({
+                        'background':   '#f8fafc',
+                        'font-weight':  '600',
+                        'font-size':    '0.77rem',
+                        'color':        '#475569',
+                        'border-color': '#e2e8f0'
+                    });
+                },
+
+                save: function () {
+                    KSwal.toast('success', 'Salary adjustment updated.');
+                }
+            });
+
+        });
+
+        // ══════════════════════════════════════════
+        //  FILTER DATA FUNCTION
+        //  Called by dataSource read transport.data
+        //  Define/replace this with your actual filter inputs
+        // ══════════════════════════════════════════
+        function additionalSalaryInfos() {
+            return {
+                adjustmentMonth: $('#querySalaryMonth').data('kendoDropDownList')
+                                     ? $('#querySalaryMonth').data('kendoDropDownList').value() || null
+                                     : null,
+                adjustmentYear:  $('#querySalaryYear').data('kendoDropDownList')
+                                     ? parseInt($('#querySalaryYear').data('kendoDropDownList').value()) || null
+                                     : null,
+                driverName:      $('#querySalaryDriverName').val().trim() || null
+            };
+        }
+
+        // ══════════════════════════════════════════
+        //  REFRESH
+        // ══════════════════════════════════════════
+        function refreshSalaryGrid() {
+            var grid = $('#salary_adjustment_grid').data('kendoGrid');
+            if (grid) {
+                grid.dataSource.page(1);
+                grid.dataSource.read();
+            }
+        }
+
+        // ══════════════════════════════════════════
+        //  ERROR HANDLER
+        // ══════════════════════════════════════════
+        function salaryGridErrorHandler(e) {
+            var msg = 'An error occurred loading salary adjustments.';
+            if (e.errors) {
+                var parts = [];
+                $.each(e.errors, function (key, val) {
+                    if (val.errors) parts.push(val.errors.join('\n'));
+                });
+                if (parts.length) msg = parts.join('\n');
+            } else if (e.xhr && e.xhr.responseText) {
+                msg = 'Server error. Please try again.';
+                console.error('Salary grid error:', e.xhr.responseText);
+            }
+            KSwal.error('Grid Error', msg);
+        }
+    </script>
+}

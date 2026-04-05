@@ -1,0 +1,63 @@
+﻿@{
+    ViewData["Title"] = "Gate Activity";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Gate Activity</h1>
+</div>
+
+<div class="ptc-card">
+    <div class="ptc-card-body">
+        <div id="gateActivityGrid"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+
+            $('#gateActivityGrid').kendoGrid({
+                dataSource: {
+                    transport: {
+                        read: {
+                            url:         '/IGH/GetGateActivity',
+                            type:        'POST',
+                            contentType: 'application/json'
+                        }
+                    },
+                    schema: {
+                        data:  'Data',    // matches ToDataSourceResult response
+                        total: 'Total'
+                    },
+                    serverPaging:  true,
+                    serverSorting: true,
+                    pageSize:      10
+                },
+                columns: [
+                    { field: 'Id',      title: 'Ref #',   width: 100 },
+                    { field: 'Type',    title: 'Type',     width: 100 },
+                    { field: 'Vehicle', title: 'Vehicle',  width: 110 },
+                    { field: 'Driver',  title: 'Driver'               },
+                    { field: 'Time',    title: 'Time',     width: 100 },
+                    { field: 'Status',  title: 'Status',   width: 110,
+                      template: function (d) {
+                        var map = {
+                            'Completed':   ['#dcfce7','#15803d'],
+                            'In Progress': ['#dbeafe','#1d4ed8'],
+                            'Pending':     ['#fef3c7','#92400e']
+                        };
+                        var c = map[d.Status] || ['#f1f5f9','#64748b'];
+                        return '<span style="background:' + c[0] + ';color:' + c[1] + ';' +
+                               'font-size:0.67rem;font-weight:700;padding:2px 9px;border-radius:20px;">'
+                               + d.Status + '</span>';
+                      }
+                    }
+                ],
+                pageable: { buttonCount: 3 },
+                sortable: true,
+                scrollable: false
+            });
+
+        });
+    </script>
+}

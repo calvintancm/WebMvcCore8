@@ -1,7 +1,7 @@
 @{
-    ViewData["Title"]             = "Dashboard";
+    ViewData["Title"] = "Dashboard";
     ViewData["BreadcrumbSection"] = "Main";
-    ViewData["BreadcrumbPage"]    = "Dashboard";
+    ViewData["BreadcrumbPage"] = "Dashboard";
 }
 
 <div class="page-header">
@@ -129,7 +129,9 @@
             <div class="ptc-card-header">
                 <h2 class="ptc-card-title"><i class="bi bi-table"></i> Recent Gate Activity</h2>
                 <button class="btn-ptc-outline" style="padding:5px 12px;font-size:0.75rem;"
-                        onclick="KSwal.toast('info','Loading full list...')">View All</button>
+                        onclick="KSwal.toast('info','Loading full list...')">
+                    View All
+                </button>
             </div>
             <div class="ptc-card-body" style="padding:10px;">
                 <div id="gateActivityGrid"></div>
@@ -145,14 +147,14 @@
             <div class="ptc-card-body">
                 <div style="display:flex;flex-direction:column;gap:12px;">
                     @foreach (var gate in new[] {
-                        new { Name="Gate 1 — Main",    Sub="North Entrance", Open=true  },
-                        new { Name="Gate 2 — Loading", Sub="South Bay",      Open=true  },
-                        new { Name="Gate 3 — Exit",    Sub="East Wing",      Open=false },
-                    })
+                                        new { Name="Gate 1 — Main",    Sub="North Entrance", Open=true  },
+                                        new { Name="Gate 2 — Loading", Sub="South Bay",      Open=true  },
+                                        new { Name="Gate 3 — Exit",    Sub="East Wing",      Open=false },
+                                        })
                     {
                         <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:#f8fafc;border-radius:10px;">
                             <div style="display:flex;align-items:center;gap:10px;">
-                                <div style="width:34px;height:34px;border-radius:9px;background:@(gate.Open?"rgba(5,150,105,0.1)":"rgba(220,38,38,0.1)");display:flex;align-items:center;justify-content:center;color:@(gate.Open?"#10b981":"#ef4444");">
+                                <div style="width:34px;height:34px;border-radius:9px;background:@(gate.Open ? "rgba(5,150,105,0.1)" : "rgba(220,38,38,0.1)");display:flex;align-items:center;justify-content:center;color:@(gate.Open ? "#10b981" : "#ef4444");">
                                     <i class="bi bi-gate" style="font-size:15px;"></i>
                                 </div>
                                 <div>
@@ -160,7 +162,7 @@
                                     <div style="font-size:0.7rem;color:var(--text-muted);">@gate.Sub</div>
                                 </div>
                             </div>
-                            <span style="background:@(gate.Open?"#dcfce7":"#fee2e2");color:@(gate.Open?"#15803d":"#dc2626");font-size:0.67rem;font-weight:700;padding:3px 9px;border-radius:20px;">
+                            <span style="background:@(gate.Open ? "#dcfce7" : "#fee2e2");color:@(gate.Open ? "#15803d" : "#dc2626");font-size:0.67rem;font-weight:700;padding:3px 9px;border-radius:20px;">
                                 @(gate.Open ? "OPEN" : "CLOSED")
                             </span>
                         </div>
@@ -194,13 +196,16 @@
             </div>
             <div class="ptc-card-body" style="padding:0;">
                 <ul style="list-style:none;margin:0;padding:0;">
-                    @{ var approvals = new[] {
-                        new { Id="DO-2024-089", Type="Delivery Order",  Driver="Ahmad B.", Time="09:14 AM", Color="#3b82f6" },
-                        new { Id="GI-2024-221", Type="Gate In Request", Driver="Tan C.K.", Time="09:32 AM", Color="#10b981" },
-                        new { Id="DO-2024-090", Type="Delivery Order",  Driver="Ravi S.",  Time="10:05 AM", Color="#3b82f6" },
-                        new { Id="VH-2024-041", Type="Vehicle Check",   Driver="System",   Time="10:18 AM", Color="#f59e0b" },
-                    }; }
-                    @foreach (var item in approvals) {
+                    @{
+                        var approvals = new[] {
+                                        new { Id="DO-2024-089", Type="Delivery Order",  Driver="Ahmad B.", Time="09:14 AM", Color="#3b82f6" },
+                                        new { Id="GI-2024-221", Type="Gate In Request", Driver="Tan C.K.", Time="09:32 AM", Color="#10b981" },
+                                        new { Id="DO-2024-090", Type="Delivery Order",  Driver="Ravi S.",  Time="10:05 AM", Color="#3b82f6" },
+                                        new { Id="VH-2024-041", Type="Vehicle Check",   Driver="System",   Time="10:18 AM", Color="#f59e0b" },
+                                        };
+                    }
+                    @foreach (var item in approvals)
+                    {
                         <li style="display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid #f1f5f9;">
                             <div style="width:8px;height:8px;border-radius:50%;background:@item.Color;flex-shrink:0;"></div>
                             <div style="flex:1;min-width:0;">
@@ -209,7 +214,9 @@
                             </div>
                             <div style="font-size:0.71rem;color:var(--text-muted);flex-shrink:0;">@item.Time</div>
                             <button class="btn-ptc-primary" style="padding:4px 11px;font-size:0.72rem;"
-                                    onclick="approveItem('@item.Id')">Approve</button>
+                                    onclick="approveItem('@item.Id')">
+                                Approve
+                            </button>
                         </li>
                     }
                 </ul>
@@ -223,15 +230,18 @@
             </div>
             <div class="ptc-card-body">
                 <div class="row g-3">
-                    @{ var actions = new[] {
-                        new { Icon="bi-box-arrow-in-right", Label="New Gate In",     Bg="rgba(26,110,181,0.1)", Txt="#1a6eb5" },
-                        new { Icon="bi-box-arrow-right",    Label="New Gate Out",    Bg="rgba(5,150,105,0.1)",  Txt="#059669" },
-                        new { Icon="bi-truck",              Label="New Delivery",    Bg="rgba(217,119,6,0.1)",  Txt="#d97706" },
-                        new { Icon="bi-person-plus",        Label="Reg. Driver",     Bg="rgba(8,145,178,0.1)",  Txt="#0891b2" },
-                        new { Icon="bi-clipboard-check",    Label="Vehicle Check",   Bg="rgba(124,58,237,0.1)", Txt="#7c3aed" },
-                        new { Icon="bi-bar-chart-line",     Label="View Reports",    Bg="rgba(220,38,38,0.1)",  Txt="#dc2626" },
-                    }; }
-                    @foreach (var qa in actions) {
+                    @{
+                        var actions = new[] {
+                                        new { Icon="bi-box-arrow-in-right", Label="New Gate In",     Bg="rgba(26,110,181,0.1)", Txt="#1a6eb5" },
+                                        new { Icon="bi-box-arrow-right",    Label="New Gate Out",    Bg="rgba(5,150,105,0.1)",  Txt="#059669" },
+                                        new { Icon="bi-truck",              Label="New Delivery",    Bg="rgba(217,119,6,0.1)",  Txt="#d97706" },
+                                        new { Icon="bi-person-plus",        Label="Reg. Driver",     Bg="rgba(8,145,178,0.1)",  Txt="#0891b2" },
+                                        new { Icon="bi-clipboard-check",    Label="Vehicle Check",   Bg="rgba(124,58,237,0.1)", Txt="#7c3aed" },
+                                        new { Icon="bi-bar-chart-line",     Label="View Reports",    Bg="rgba(220,38,38,0.1)",  Txt="#dc2626" },
+                                        };
+                    }
+                    @foreach (var qa in actions)
+                    {
                         <div class="col-6 col-md-4">
                             <button onclick="KSwal.toast('info','Opening @qa.Label...')"
                                     style="width:100%;padding:15px 6px;background:@qa.Bg;border:1px solid @qa.Bg;border-radius:11px;cursor:pointer;text-align:center;transition:transform 0.2s,box-shadow 0.2s;"
@@ -249,144 +259,233 @@
 </div>
 
 @section Scripts {
-<script>
-$(function () {
+    <script>
+        $(function () {
 
-    /* ── KSwal Demos ── */
-    $('#btnKSwalInfo, #btnDemoKSwal').on('click', function () {
-        KSwal.alert(
-            'PTC IGH System running normally.<br><br>'
-            + '<strong>Server:</strong> SG-PROD-01 &nbsp;|&nbsp; <strong>Ver:</strong> 2.0.4<br>'
-            + '<strong>Last sync:</strong> ' + new Date().toLocaleTimeString(),
-            'System Information', 'info'
-        );
-    });
+            /* ── KSwal Demos ── */
+            $('#btnKSwalInfo, #btnDemoKSwal').on('click', function () {
+                KSwal.alert(
+                    'PTC IGH System running normally.<br><br>'
+                    + '<strong>Server:</strong> SG-PROD-01 &nbsp;|&nbsp; <strong>Ver:</strong> 2.0.4<br>'
+                    + '<strong>Last sync:</strong> ' + new Date().toLocaleTimeString(),
+                    'System Information', 'info'
+                );
+            });
 
-    $('#btnKSwalWarn').on('click', function () {
-        KSwal.warning('Session Warning', 'Your session expires in <strong>5 minutes</strong>. Please save your work.');
-    });
+            $('#btnKSwalWarn').on('click', function () {
+                KSwal.warning('Session Warning', 'Your session expires in <strong>5 minutes</strong>. Please save your work.');
+            });
 
-    $('#btnKSwalSuccess').on('click', function () {
-        KSwal.success('Saved!', 'Gate entry recorded successfully.');
-    });
+            $('#btnKSwalSuccess').on('click', function () {
+                alert(typeof jQuery);
+                alert(typeof kendo);
+                 kendo.alert("Data saved successfully!");
+                KSwal.success('Saved!', 'Gate entry recorded successfully.');
+            });
 
-    $('#btnKSwalError').on('click', function () {
-        KSwal.error('Connection Failed', 'Unable to reach the authentication server. Please try again.');
-    });
+            $('#btnKSwalError').on('click', function () {
+                KSwal.error('Connection Failed', 'Unable to reach the authentication server. Please try again.');
+            });
 
-    $('#btnKSwalConfirm').on('click', function () {
-        KSwal.confirm(
-            'Confirm Gate Close',
-            'Close <strong>Gate 2 — Loading Bay</strong>? All pending entries will be placed on hold.',
-            function () { KSwal.toast('success', 'Gate 2 closed.'); },
-            function () { KSwal.toast('info', 'Cancelled.'); }
-        );
-    });
+            $('#btnKSwalConfirm').on('click', function () {
+                KSwal.confirm(
+                    'Confirm Gate Close',
+                    'Close <strong>Gate 2 — Loading Bay</strong>? All pending entries will be placed on hold.',
+                    function () { KSwal.toast('success', 'Gate 2 closed.'); },
+                    function () { KSwal.toast('info', 'Cancelled.'); }
+                );
+            });
 
-    $('#btnKSwalDelete').on('click', function () {
-        KSwal.confirmDelete(
-            'Delete Record?',
-            'This will permanently delete <strong>DO-2024-089</strong>.',
-            function () { KSwal.toast('success', 'Record deleted.'); }
-        );
-    });
+            $('#btnKSwalDelete').on('click', function () {
+                KSwal.confirmDelete(
+                    'Delete Record?',
+                    'This will permanently delete <strong>DO-2024-089</strong>.',
+                    function () { KSwal.toast('success', 'Record deleted.'); }
+                );
+            });
 
-    $('#btnKSwalToast').on('click', function () {
-       
-        KSwal.toast('success', 'Record saved!');
-        setTimeout(function () { KSwal.toast('info', 'Email notification sent.'); }, 1400);
-    });
+            $('#btnKSwalToast').on('click', function () {
 
-    /* ── Kendo Form Window ── */
-    $('#btnKendoForm').on('click', function () {
-        alert('456');
-        if ($('#quickEntryWin').length) {
-            $('#quickEntryWin').data('kendoWindow').center().open(); return;
-        }
-        var html = '<div id="quickEntryWin" style="padding:4px 0;">'
-            + '<div style="margin-bottom:12px;"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Vehicle No.</label>'
-            + '<input class="k-textbox" name="vehicleNo" style="width:100%;" placeholder="e.g. SGX1234A"/></div>'
-            + '<div style="margin-bottom:12px;"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Driver Name</label>'
-            + '<input class="k-textbox" name="driverName" style="width:100%;" placeholder="Full name"/></div>'
-            + '<div style="margin-bottom:4px;"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Gate</label>'
-            + '<select id="gateDD" style="width:100%;"><option value="">-- Select --</option>'
-            + '<option value="1">Gate 1 — Main</option><option value="2">Gate 2 — Loading</option></select></div>'
-            + '</div>';
-        $('body').append(html);
-        var wnd = $('#quickEntryWin').kendoWindow({
-            title:'Quick Gate Entry', modal:true, resizable:false, draggable:true,
-            width:'420px', actions:['close'], close:function(){}
-        }).data('kendoWindow');
-        $('#gateDD').kendoDropDownList();
-        wnd.element.after('<div style="padding:10px 16px 14px;background:#f8fafc;border-top:1px solid #e2e8f0;border-radius:0 0 8px 8px;display:flex;justify-content:flex-end;gap:8px;">'
-            +'<button class="k-button" onclick="$(\'#quickEntryWin\').data(\'kendoWindow\').close()">Cancel</button>'
-            +'<button class="k-button k-primary" id="btnSaveEntry">Save Entry</button></div>');
-        wnd.center().open();
-        $(document).off('click','#btnSaveEntry').on('click','#btnSaveEntry',function(){
-            var v=$('[name="vehicleNo"]').val(), d=$('[name="driverName"]').val();
-            if(!v||!d){ KSwal.warning('Validation','Please fill in all required fields.'); return; }
-            $('#quickEntryWin').data('kendoWindow').close();
-            KSwal.toast('success','Gate entry for '+v+' saved!');
+                KSwal.toast('success', 'Record saved!');
+                setTimeout(function () { KSwal.toast('info', 'Email notification sent.'); }, 1400);
+            });
+
+                           /* ── Kendo Form Window ── */
+                    $('#btnKendoForm').on('click', function () {
+                        kendo.alert("This demo shows.");
+                        /* If window already exists, re-center and re-open */
+                        var $win = $('#quickEntryWin');
+                        if ($win.length) {
+                            var existWnd = $win.data('kendoWindow');
+                            if (existWnd) {
+                                existWnd.center().open();
+                            }
+                            return;
+                        }
+
+                        /* ── Append markup to body FIRST ─────────────────────────
+                           Kendo needs the element in the DOM before .kendoWindow()
+                           so it can measure dimensions for .center() to work.
+                        ──────────────────────────────────────────────────────── */
+                        $('body').append(
+                            '<div id="quickEntryWin">' +
+
+                                '<div style="padding:16px 18px 0;">' +
+
+                                    '<div style="margin-bottom:14px;">' +
+                                        '<label style="font-size:0.78rem;font-weight:600;' +
+                                               'display:block;margin-bottom:5px;color:#475569;">' +
+                                            'Vehicle No.' +
+                                        '</label>' +
+                                        '<input id="qe_vehicle" class="k-textbox" style="width:100%;" ' +
+                                               'placeholder="e.g. SGX1234A"/>' +
+                                    '</div>' +
+
+                                    '<div style="margin-bottom:14px;">' +
+                                        '<label style="font-size:0.78rem;font-weight:600;' +
+                                               'display:block;margin-bottom:5px;color:#475569;">' +
+                                            'Driver Name' +
+                                        '</label>' +
+                                        '<input id="qe_driver" class="k-textbox" style="width:100%;" ' +
+                                               'placeholder="Full name"/>' +
+                                    '</div>' +
+
+                                    '<div style="margin-bottom:6px;">' +
+                                        '<label style="font-size:0.78rem;font-weight:600;' +
+                                               'display:block;margin-bottom:5px;color:#475569;">' +
+                                            'Gate' +
+                                        '</label>' +
+                                        '<select id="qe_gate" style="width:100%;">' +
+                                            '<option value="">-- Select Gate --</option>' +
+                                            '<option value="1">Gate 1 — Main</option>' +
+                                            '<option value="2">Gate 2 — Loading</option>' +
+                                        '</select>' +
+                                    '</div>' +
+
+                                '</div>' +
+
+                                /* Footer is INSIDE the same div Kendo wraps —
+                                   no wnd.element.after() which breaks the widget */
+                                '<div style="margin-top:18px;padding:12px 18px;' +
+                                            'background:#f8fafc;border-top:1px solid #e2e8f0;' +
+                                            'display:flex;justify-content:flex-end;gap:8px;">' +
+                                    '<button class="k-button" id="qe_cancel">Cancel</button>' +
+                                    '<button class="k-button k-primary" id="qe_save">Save Entry</button>' +
+                                '</div>' +
+
+                            '</div>'
+                        );
+
+                        /* ── Init Kendo Window ────────────────────────────────────
+                           visible:false  → window is rendered but hidden so Kendo
+                           can calculate its size; we call .center().open() below.
+                        ──────────────────────────────────────────────────────── */
+                        var wnd = $('#quickEntryWin').kendoWindow({
+                            title:     'Quick Gate Entry',
+                            modal:     true,
+                            resizable: false,
+                            draggable: true,
+                            width:     '420px',
+                            visible:   false,
+                            actions:   ['close'],
+                            close: function () {
+                                /* Destroy widget + remove element after animation */
+                                var self = this;
+                                setTimeout(function () {
+                                    self.destroy();
+                                    $('#quickEntryWin').remove();
+                                }, 300);
+                            }
+                        }).data('kendoWindow');
+
+                        /* ── Kendo DropDownList ── */
+                        $('#qe_gate').kendoDropDownList();
+
+                        /* ── Button events (namespaced so they don't stack) ── */
+                        $(document)
+                            .off('click.qe')
+                            .on('click.qe', '#qe_cancel', function () {
+                                var w = $('#quickEntryWin').data('kendoWindow');
+                                if (w) { w.close(); }
+                            })
+                            .on('click.qe', '#qe_save', function () {
+                                var v = $('#qe_vehicle').val().trim();
+                                var d = $('#qe_driver').val().trim();
+                                if (!v || !d) {
+                                    KSwal.warning('Validation', 'Please fill in all required fields.');
+                                    return;
+                                }
+                                var w = $('#quickEntryWin').data('kendoWindow');
+                                if (w) { w.close(); }
+                                KSwal.toast('success', 'Gate entry for ' + v + ' saved!');
+                            });
+
+                        /* ── setTimeout(0) yields to browser layout pass ────────
+                           This lets Kendo finish painting the window before we
+                           call .center() so the position calculation is correct.
+                        ──────────────────────────────────────────────────────── */
+                        setTimeout(function () {
+                            wnd.center().open();
+                        }, 0);
+                    });
+
+            /* ── Approve ── */
+            window.approveItem = function (id) {
+                KSwal.confirm(
+                    'Approve ' + id + '?',
+                    'Confirm approval of <strong>' + id + '</strong>. Driver will be notified.',
+                    function () { KSwal.toast('success', id + ' approved!'); }
+                );
+            };
+
+            /* ── Kendo Grid ── */
+            $('#gateActivityGrid').kendoGrid({
+                dataSource: {
+                    data: [
+                        { id:'GI-001',type:'Gate In', vehicle:'TRK-2241',driver:'Ahmad Bin Ismail',time:'08:15 AM',status:'Completed' },
+                        { id:'DO-089',type:'Delivery',vehicle:'VAN-1102',driver:'Tan Chee Keong',  time:'08:42 AM',status:'In Progress' },
+                        { id:'GI-002',type:'Gate In', vehicle:'TRK-3389',driver:'Ravi Subramaniam',time:'09:05 AM',status:'Completed' },
+                        { id:'GO-041',type:'Gate Out',vehicle:'TRK-2241',driver:'Ahmad Bin Ismail',time:'09:30 AM',status:'Completed' },
+                        { id:'VC-011',type:'V.Check', vehicle:'VAN-0987',driver:'System Check',    time:'10:00 AM',status:'Pending' },
+                        { id:'DO-090',type:'Delivery',vehicle:'TRK-5571',driver:'Lim Ah Kow',      time:'10:22 AM',status:'Pending' },
+                    ], pageSize:5
+                },
+                columns:[
+                    { field:'id',title:'Ref #',width:90,attributes:{style:'font-family:Sora,sans-serif;font-weight:600;font-size:0.78rem;'} },
+                    { field:'type',title:'Type',width:88 },
+                    { field:'vehicle',title:'Vehicle',width:92 },
+                    { field:'driver',title:'Driver' },
+                    { field:'time',title:'Time',width:88 },
+                    { field:'status',title:'Status',width:108,
+                      template:function(d){
+                        var m={'Completed':['#dcfce7','#15803d'],'In Progress':['#dbeafe','#1d4ed8'],'Pending':['#fef3c7','#92400e']};
+                        var c=m[d.status]||['#f1f5f9','#64748b'];
+                        return '<span style="background:'+c[0]+';color:'+c[1]+';font-size:0.67rem;font-weight:700;padding:2px 9px;border-radius:20px;">'+d.status+'</span>';
+                      }
+                    },
+                    { title:'Action',width:80,
+                      template:function(d){
+                        return '<button class="k-button" style="font-size:0.72rem;padding:2px 8px;"'
+                          +' onclick="KSwal.alert(\'<b>Ref:</b> '+d.id+'<br><b>Driver:</b> '+d.driver
+                          +'<br><b>Vehicle:</b> '+d.vehicle+'<br><b>Status:</b> '+d.status
+                          +'\',\'Record Details\',\'info\')">View</button>';
+                      }
+                    }
+                ],
+                pageable:{ buttonCount:3 }, sortable:true, scrollable:false
+            });
+
+            /* ── Progress bars ── */
+            $('#capacityProgress').kendoProgressBar({ type:'value',value:68,min:0,max:100,animation:{duration:900} });
+            $('#deliveryProgress').kendoProgressBar({ type:'value',value:91,min:0,max:100,animation:{duration:900} });
+            setTimeout(function(){
+                $('#capacityProgress .k-selected').css('background','linear-gradient(90deg,#1a6eb5,#3b96e8)');
+                $('#deliveryProgress .k-selected').css('background','linear-gradient(90deg,#059669,#10b981)');
+                $('.k-progressbar').css({'border-radius':'5px','overflow':'hidden','height':'8px'});
+                $('.k-selected').css('border-radius','5px');
+            },150);
+
+            setTimeout(function(){ KSwal.toast('success','Welcome to PTC IGH System!'); }, 700);
         });
-    });
-
-    /* ── Approve ── */
-    window.approveItem = function (id) {
-        KSwal.confirm(
-            'Approve ' + id + '?',
-            'Confirm approval of <strong>' + id + '</strong>. Driver will be notified.',
-            function () { KSwal.toast('success', id + ' approved!'); }
-        );
-    };
-
-    /* ── Kendo Grid ── */
-    $('#gateActivityGrid').kendoGrid({
-        dataSource: {
-            data: [
-                { id:'GI-001',type:'Gate In', vehicle:'TRK-2241',driver:'Ahmad Bin Ismail',time:'08:15 AM',status:'Completed' },
-                { id:'DO-089',type:'Delivery',vehicle:'VAN-1102',driver:'Tan Chee Keong',  time:'08:42 AM',status:'In Progress' },
-                { id:'GI-002',type:'Gate In', vehicle:'TRK-3389',driver:'Ravi Subramaniam',time:'09:05 AM',status:'Completed' },
-                { id:'GO-041',type:'Gate Out',vehicle:'TRK-2241',driver:'Ahmad Bin Ismail',time:'09:30 AM',status:'Completed' },
-                { id:'VC-011',type:'V.Check', vehicle:'VAN-0987',driver:'System Check',    time:'10:00 AM',status:'Pending' },
-                { id:'DO-090',type:'Delivery',vehicle:'TRK-5571',driver:'Lim Ah Kow',      time:'10:22 AM',status:'Pending' },
-            ], pageSize:5
-        },
-        columns:[
-            { field:'id',title:'Ref #',width:90,attributes:{style:'font-family:Sora,sans-serif;font-weight:600;font-size:0.78rem;'} },
-            { field:'type',title:'Type',width:88 },
-            { field:'vehicle',title:'Vehicle',width:92 },
-            { field:'driver',title:'Driver' },
-            { field:'time',title:'Time',width:88 },
-            { field:'status',title:'Status',width:108,
-              template:function(d){
-                var m={'Completed':['#dcfce7','#15803d'],'In Progress':['#dbeafe','#1d4ed8'],'Pending':['#fef3c7','#92400e']};
-                var c=m[d.status]||['#f1f5f9','#64748b'];
-                return '<span style="background:'+c[0]+';color:'+c[1]+';font-size:0.67rem;font-weight:700;padding:2px 9px;border-radius:20px;">'+d.status+'</span>';
-              }
-            },
-            { title:'Action',width:80,
-              template:function(d){
-                return '<button class="k-button" style="font-size:0.72rem;padding:2px 8px;"'
-                  +' onclick="KSwal.alert(\'<b>Ref:</b> '+d.id+'<br><b>Driver:</b> '+d.driver
-                  +'<br><b>Vehicle:</b> '+d.vehicle+'<br><b>Status:</b> '+d.status
-                  +'\',\'Record Details\',\'info\')">View</button>';
-              }
-            }
-        ],
-        pageable:{ buttonCount:3 }, sortable:true, scrollable:false
-    });
-
-    /* ── Progress bars ── */
-    $('#capacityProgress').kendoProgressBar({ type:'value',value:68,min:0,max:100,animation:{duration:900} });
-    $('#deliveryProgress').kendoProgressBar({ type:'value',value:91,min:0,max:100,animation:{duration:900} });
-    setTimeout(function(){
-        $('#capacityProgress .k-selected').css('background','linear-gradient(90deg,#1a6eb5,#3b96e8)');
-        $('#deliveryProgress .k-selected').css('background','linear-gradient(90deg,#059669,#10b981)');
-        $('.k-progressbar').css({'border-radius':'5px','overflow':'hidden','height':'8px'});
-        $('.k-selected').css('border-radius','5px');
-    },150);
-
-    setTimeout(function(){ KSwal.toast('success','Welcome to PTC IGH System!'); }, 700);
-});
-</script>
+    </script>
 }

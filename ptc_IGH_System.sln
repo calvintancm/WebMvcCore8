@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36301.6
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebCore8MVC", "WebCore8MVC.csproj", "{7BEA53B5-AC41-4340-8793-DDDABEFF5418}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ptc_IGH_System", "ptc_IGH_System.csproj", "{7BEA53B5-AC41-4340-8793-DDDABEFF5418}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

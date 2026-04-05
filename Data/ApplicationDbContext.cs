@@ -15,6 +15,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ptc_IGH_Sys.Models;
+using ptc_IGH_Sys.Models.IGH;
 
 namespace ptc_IGH_Sys.Data
 {
@@ -25,6 +26,8 @@ namespace ptc_IGH_Sys.Data
         {
         }
 
+        // ✅ ADD HERE
+        public DbSet<IGH_Leave_Transaction> IGH_Leave_Transactions { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
