@@ -8,7 +8,6 @@
     ".NETCoreApp,Version=v8.0": {
       "ptc_IGH_System/1.0.0": {
         "dependencies": {
-          "KendoUIProfessional": "2019.1.220",
           "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": "8.0.18",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.0",
           "Microsoft.AspNetCore.Identity.UI": "8.0.18",
@@ -61,12 +60,6 @@
             "assemblyVersion": "2.14.0.0",
             "fileVersion": "2.14.1.48190"
           }
-        }
-      },
-      "jQuery/1.9.1": {},
-      "KendoUIProfessional/2019.1.220": {
-        "dependencies": {
-          "jQuery": "1.9.1"
         }
       },
       "Microsoft.AspNetCore.Antiforgery/1.0.0": {
@@ -2075,20 +2068,6 @@
       "sha512": "sha512-lQKvtaTDOXnoVJ20ibTuSIOf2i0uO0MPbDhd1jm238I+U/2ZnRENj0cktKZhtchBMtCUSRQ5v4xBCUbKNmyVMw==",
       "path": "humanizer.core/2.14.1",
       "hashPath": "humanizer.core.2.14.1.nupkg.sha512"
-    },
-    "jQuery/1.9.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-HiX9icLyiJGgiL5EOIn0d1MBPHVV2M9mzWT4mANdniDNR51RvAFTyKEXEd2+5yQJ4PJ5xePOR61Vjj/omQzYcw==",
-      "path": "jquery/1.9.1",
-      "hashPath": "jquery.1.9.1.nupkg.sha512"
-    },
-    "KendoUIProfessional/2019.1.220": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-daWNqMDJxpV6enr58t/vGcyTgE3lyiXw8NOlcofREsgm+eWhUH9xPRnowf/pGMEPL7DBMSQbdogI91pTL61zxQ==",
-      "path": "kendouiprofessional/2019.1.220",
-      "hashPath": "kendouiprofessional.2019.1.220.nupkg.sha512"
     },
     "Microsoft.AspNetCore.Antiforgery/1.0.0": {
       "type": "package",

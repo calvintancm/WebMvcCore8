@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ptc_IGH_System")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e621f97959d125f045aa3f023b7c14e678a7b04a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0f64ca8fa8c5374e6b8c027380f791ec9db262da")]
 [assembly: System.Reflection.AssemblyProductAttribute("ptc_IGH_System")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ptc_IGH_System")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

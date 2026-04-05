@@ -25,9 +25,7 @@ namespace ptc_IGH_Sys.Controllers
             _logger = logger;
         }
 
-        // ─────────────────────────────────────────────────────────
-        // GET: /IGH/LeaveTransaction
-        // ─────────────────────────────────────────────────────────
+       
         [HttpGet]
         public IActionResult LeaveTransaction()
         {
@@ -40,10 +38,13 @@ namespace ptc_IGH_Sys.Controllers
             return View();
         }
 
-        // ─────────────────────────────────────────────────────────
-        // POST: /IGH/LeaveTransactionRead
-        // Called by Kendo Grid dataSource read
-        // ─────────────────────────────────────────────────────────
+     
+        public IActionResult Smart()
+        {
+            return View(); // This will look for Views/IGH/Smart.cshtml
+
+        }
+
         [HttpPost]
         public async Task<IActionResult> LeaveTransactionRead(
             [DataSourceRequest] DataSourceRequest request,
@@ -55,19 +56,19 @@ namespace ptc_IGH_Sys.Controllers
             {
                 var query = _db.IGH_Leave_Transactions.AsNoTracking().AsQueryable();
 
-                // Filter by year
+              
                 if (leaveYear.HasValue)
                 {
                     query = query.Where(x => x.Leave_Date.Year == leaveYear.Value);
                 }
 
-                // Filter by month
+             
                 if (leaveMonth.HasValue && leaveMonth.Value > 0)
                 {
                     query = query.Where(x => x.Leave_Date.Month == leaveMonth.Value);
                 }
 
-                // Filter by driver name (case-insensitive contains)
+            
                 if (!string.IsNullOrWhiteSpace(driverName))
                 {
                     var search = driverName.Trim().ToUpper();
@@ -76,7 +77,7 @@ namespace ptc_IGH_Sys.Controllers
                         x.Driver_Name.ToUpper().Contains(search));
                 }
 
-                // Project to ViewModel
+           
                 var projected = query
                     .OrderBy(x => x.Driver_Name)
                     .Select(x => new LeaveTransactionViewModel

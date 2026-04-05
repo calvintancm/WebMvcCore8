@@ -21,6 +21,5 @@
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <PkgMicrosoft_CodeAnalysis_Analyzers Condition=" '$(PkgMicrosoft_CodeAnalysis_Analyzers)' == '' ">C:\Users\calvin.tan\.nuget\packages\microsoft.codeanalysis.analyzers\3.3.3</PkgMicrosoft_CodeAnalysis_Analyzers>
     <PkgMicrosoft_EntityFrameworkCore_Tools Condition=" '$(PkgMicrosoft_EntityFrameworkCore_Tools)' == '' ">C:\Users\calvin.tan\.nuget\packages\microsoft.entityframeworkcore.tools\8.0.0</PkgMicrosoft_EntityFrameworkCore_Tools>
-    <PkgjQuery Condition=" '$(PkgjQuery)' == '' ">C:\Users\calvin.tan\.nuget\packages\jquery\1.9.1</PkgjQuery>
   </PropertyGroup>
 </Project>

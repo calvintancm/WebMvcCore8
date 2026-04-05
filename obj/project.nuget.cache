@@ -1,14 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "VfkoTDbGziA=",
+  "dgSpecHash": "1QbB8zbjczs=",
   "success": true,
   "projectFilePath": "C:\\PTC\\EDPUnity\\ptc_IGH_system\\ptc_IGH_System.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\calvin.tan\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\calvin.tan\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",
     "C:\\Users\\calvin.tan\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
-    "C:\\Users\\calvin.tan\\.nuget\\packages\\jquery\\1.9.1\\jquery.1.9.1.nupkg.sha512",
-    "C:\\Users\\calvin.tan\\.nuget\\packages\\kendouiprofessional\\2019.1.220\\kendouiprofessional.2019.1.220.nupkg.sha512",
     "C:\\Users\\calvin.tan\\.nuget\\packages\\microsoft.aspnetcore.antiforgery\\1.0.0\\microsoft.aspnetcore.antiforgery.1.0.0.nupkg.sha512",
     "C:\\Users\\calvin.tan\\.nuget\\packages\\microsoft.aspnetcore.authorization\\1.0.0\\microsoft.aspnetcore.authorization.1.0.0.nupkg.sha512",
     "C:\\Users\\calvin.tan\\.nuget\\packages\\microsoft.aspnetcore.cors\\1.0.0\\microsoft.aspnetcore.cors.1.0.0.nupkg.sha512",

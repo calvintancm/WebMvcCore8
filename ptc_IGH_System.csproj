@@ -16,12 +16,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\IGHDELController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="Controllers\LeaveTransaction.cshtml" />
     <Content Remove="Views\LeaveTransaction.cshtml" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="KendoUIProfessional" Version="2019.1.220" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.18" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.18" />
