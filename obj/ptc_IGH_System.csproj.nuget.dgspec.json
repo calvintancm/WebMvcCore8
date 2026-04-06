@@ -79,6 +79,10 @@
               "target": "Package",
               "version": "[13.0.3, )"
             },
+            "System.Linq.Dynamic.Core": {
+              "target": "Package",
+              "version": "[1.7.2, )"
+            },
             "Telerik.UI.for.AspNet.Core": {
               "target": "Package",
               "version": "[2019.1.220, )"

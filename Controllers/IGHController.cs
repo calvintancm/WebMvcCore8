@@ -1,15 +1,29 @@
-using Kendo.Mvc.Extensions;
-using Kendo.Mvc.UI;
+/*
+ * IGHController.cs
+ * ════════════════════════════════════════════════════════════════
+ * Uses KendoGrid helper from Helpers/KendoGrid.cs
+ * NO [DataSourceRequest] — works on .NET 8 forever
+ * NO Telerik NuGet dependency for grid binding
+ * ════════════════════════════════════════════════════════════════
+ */
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ptc_IGH_Sys.Data;
+using ptc_IGH_Sys.Helpers;          // ← KendoGridRequest, KendoGridResult
 using ptc_IGH_Sys.Models.IGH;
 using ptc_IGH_Sys.ViewModels.IGH;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+
+/* ── REMOVED — no longer needed without [DataSourceRequest] ──
+   using Kendo.Mvc;
+   using Kendo.Mvc.Extensions;
+   using Kendo.Mvc.UI;
+   ─────────────────────────────────────────────────────────── */
 
 namespace ptc_IGH_Sys.Controllers
 {
@@ -25,55 +39,47 @@ namespace ptc_IGH_Sys.Controllers
             _logger = logger;
         }
 
-        // ── Views ────────────────────────────────────────────────
-        [HttpGet]
-        public IActionResult LeaveTransaction() => View();
+        /* ── Views ──────────────────────────────────────────────── */
+        [HttpGet] public IActionResult LeaveTransaction() => View();
+        [HttpGet] public IActionResult SalaryAdjustment() => View();
+        [HttpGet] public IActionResult Smart() => View();
 
-        [HttpGet]
-        public IActionResult SalaryAdjustment() => View();
-
-        [HttpGet]
-        public IActionResult Smart() => View();
-
-        // ─────────────────────────────────────────────────────────
-        // POST: /IGH/LeaveTransactionRead
-        //
-        // WHY NO [FromBody] or [FromForm]:
-        //   type: 'aspnetmvc-ajax' in JS causes Kendo to POST as
-        //   application/x-www-form-urlencoded.
-        //   ASP.NET Core MVC binds form fields to simple parameters
-        //   (int?, string) automatically — no attribute needed.
-        //
-        // WHY [DataSourceRequest] works here:
-        //   It reads paging/sorting/filtering from the form body,
-        //   which Kendo posts alongside our custom leaveMonth etc.
-        // ─────────────────────────────────────────────────────────
+        /* ════════════════════════════════════════════════════════════
+           POST: /IGH/LeaveTransactionRead
+           
+           HOW IT WORKS:
+           [FromForm] KendoGridRequest kendo  → receives page/pageSize/sort
+           [FromForm] int? leaveMonth         → receives your custom filter
+           [FromForm] int? leaveYear          → receives your custom filter
+           [FromForm] string driverName       → receives your custom filter
+           
+           Kendo JS grid posts ALL of these together as form fields.
+           parameterMap in JS merges them into one POST body.
+        ════════════════════════════════════════════════════════════ */
         [HttpPost]
         public async Task<IActionResult> LeaveTransactionRead(
-            [DataSourceRequest] DataSourceRequest request,
-            int? leaveMonth = null,
-            int? leaveYear = null,
-            string driverName = null)
+            [FromForm] KendoGridRequest kendo,
+            [FromForm] int? leaveMonth = null,
+            [FromForm] int? leaveYear = null,
+            [FromForm] string driverName = null)
         {
             _logger.LogInformation(
-                "LeaveTransactionRead → month={M} year={Y} driver='{D}'",
-                leaveMonth, leaveYear, driverName);
+                "LeaveTransactionRead page={P} size={S} month={M} year={Y} driver='{D}'",
+                kendo?.Page, kendo?.PageSize, leaveMonth, leaveYear, driverName);
 
             try
             {
+                /* ── Build query with filters ── */
                 var query = _db.IGH_Leave_Transactions
                     .AsNoTracking()
                     .AsQueryable();
 
-                // ── Year filter ──
                 if (leaveYear.HasValue && leaveYear.Value > 0)
                     query = query.Where(x => x.Leave_Date.Year == leaveYear.Value);
 
-                // ── Month filter ──
                 if (leaveMonth.HasValue && leaveMonth.Value > 0)
                     query = query.Where(x => x.Leave_Date.Month == leaveMonth.Value);
 
-                // ── Driver name filter (case-insensitive) ──
                 if (!string.IsNullOrWhiteSpace(driverName))
                 {
                     var term = driverName.Trim().ToUpper();
@@ -82,9 +88,26 @@ namespace ptc_IGH_Sys.Controllers
                         x.Driver_Name.ToUpper().Contains(term));
                 }
 
-                var projected = query
-                    .OrderBy(x => x.Driver_Name)
-                    .Select(x => new LeaveTransactionViewModel
+                /* ── Project to ViewModel ── */
+                var projected = query.Select(x => new LeaveTransactionViewModel
+                {
+                    Id = x.Id,
+                    DriverId = x.Driver_Id,
+                    DriverName = x.Driver_Name ?? string.Empty,
+                    LeaveDate = x.Leave_Date,
+                    LeaveCount = x.Leave_Count,
+                    LeaveType = x.Leave_Type ?? string.Empty,
+                    LeaveMonth = x.Leave_Month,
+                    Remarks = x.Remarks ?? string.Empty,
+                    CreatedAt = x.Created_At
+                });
+
+                /* ── Apply paging + sorting via global helper ── */
+                /* defaultSort = "DriverName" means sort by DriverName asc   */
+                /* unless grid sends its own sort instruction                 */
+                var result = await kendo.ToResultAsync(
+                    query,
+                    x => new LeaveTransactionViewModel
                     {
                         Id = x.Id,
                         DriverId = x.Driver_Id,
@@ -95,124 +118,131 @@ namespace ptc_IGH_Sys.Controllers
                         LeaveMonth = x.Leave_Month,
                         Remarks = x.Remarks ?? string.Empty,
                         CreatedAt = x.Created_At
-                    });
+                    },
+                    defaultSort: "Driver_Name"
+                );
 
-                var result = await projected.ToDataSourceResultAsync(request);
                 return Json(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "LeaveTransactionRead failed");
-                ModelState.AddModelError("ServerError", ex.Message);
-                return Json(Array.Empty<LeaveTransactionViewModel>()
-                    .AsQueryable()
-                    .ToDataSourceResult(request, ModelState));
+                return Json(KendoGridResult<LeaveTransactionViewModel>.Error(ex.Message));
             }
         }
 
-        // ─────────────────────────────────────────────────────────
-        // POST: /IGH/LeaveTransactionUpdate
-        //
-        // NO [FromBody] — Kendo posts update as form-urlencoded.
-        // [FromBody] would break [DataSourceRequest] binding.
-        // ─────────────────────────────────────────────────────────
+        /* ════════════════════════════════════════════════════════════
+           POST: /IGH/LeaveTransactionUpdate
+        ════════════════════════════════════════════════════════════ */
         [HttpPost]
         public async Task<IActionResult> LeaveTransactionUpdate(
-            [DataSourceRequest] DataSourceRequest request,
-            LeaveTransactionViewModel viewModel)       // ← NO [FromBody]
+            [FromForm] LeaveTransactionViewModel viewModel)
         {
             try
             {
-                if (viewModel != null && ModelState.IsValid)
+                if (viewModel == null)
+                    return Json(KendoGridResult<LeaveTransactionViewModel>
+                        .Error("Invalid request data."));
+
+                if (!ModelState.IsValid)
                 {
-                    var record = await _db.IGH_Leave_Transactions
-                        .FirstOrDefaultAsync(x => x.Id == viewModel.Id);
-
-                    if (record == null)
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Any())
+                        .ToDictionary(
+                            k => k.Key,
+                            v => v.Value.Errors.Select(e => e.ErrorMessage).ToArray());
+                    return Json(new
                     {
-                        ModelState.AddModelError("", $"Leave record #{viewModel.Id} not found.");
-                        return Json(new[] { viewModel }.ToDataSourceResult(request, ModelState));
-                    }
-
-                    record.Leave_Count = viewModel.LeaveCount ?? 0;
-                    record.Leave_Type = viewModel.LeaveType;
-                    record.Remarks = viewModel.Remarks;
-
-                    await _db.SaveChangesAsync();
-
-                    viewModel.DriverName = record.Driver_Name;
-                    viewModel.CreatedAt = record.Created_At;
-                    viewModel.LeaveDate = record.Leave_Date;
-                    viewModel.LeaveMonth = record.Leave_Month;
-
-                    _logger.LogInformation(
-                        "LeaveTransaction #{Id} updated by {User}",
-                        viewModel.Id, User.Identity?.Name);
+                        Data = new[] { viewModel },
+                        Total = 1,
+                        Errors = errors
+                    });
                 }
 
-                return Json(new[] { viewModel }.ToDataSourceResult(request, ModelState));
+                var record = await _db.IGH_Leave_Transactions
+                    .FirstOrDefaultAsync(x => x.Id == viewModel.Id);
+
+                if (record == null)
+                    return Json(KendoGridResult<LeaveTransactionViewModel>
+                        .Error($"Record #{viewModel.Id} not found."));
+
+                /* Update only editable fields */
+                record.Leave_Count = viewModel.LeaveCount ?? 0;
+                record.Leave_Type = viewModel.LeaveType;
+                record.Remarks = viewModel.Remarks;
+
+                await _db.SaveChangesAsync();
+
+                /* Return updated values back to grid */
+                viewModel.DriverName = record.Driver_Name;
+                viewModel.CreatedAt = record.Created_At;
+                viewModel.LeaveDate = record.Leave_Date;
+                viewModel.LeaveMonth = record.Leave_Month;
+
+                _logger.LogInformation(
+                    "LeaveTransaction #{Id} updated by {User}",
+                    viewModel.Id, User.Identity?.Name);
+
+                return Json(new { Data = new[] { viewModel }, Total = 1 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "LeaveTransactionUpdate failed Id={Id}", viewModel?.Id);
-                ModelState.AddModelError("", ex.Message);
-                return Json(new[] { viewModel }.ToDataSourceResult(request, ModelState));
+                return Json(KendoGridResult<LeaveTransactionViewModel>.Error(ex.Message));
             }
         }
 
-        // ─────────────────────────────────────────────────────────
-        // POST: /IGH/LeaveTransactionCreate
-        // ─────────────────────────────────────────────────────────
+        /* ════════════════════════════════════════════════════════════
+           POST: /IGH/LeaveTransactionCreate
+        ════════════════════════════════════════════════════════════ */
         [HttpPost]
         public async Task<IActionResult> LeaveTransactionCreate(
-            [DataSourceRequest] DataSourceRequest request,
-            LeaveTransactionViewModel viewModel)       // ← NO [FromBody]
+            [FromForm] LeaveTransactionViewModel viewModel)
         {
             try
             {
-                if (viewModel != null && ModelState.IsValid)
+                if (viewModel == null || !ModelState.IsValid)
+                    return Json(KendoGridResult<LeaveTransactionViewModel>
+                        .Error("Invalid request data."));
+
+                var newRecord = new IGH_Leave_Transaction
                 {
-                    var newRecord = new IGH_Leave_Transaction
-                    {
-                        Driver_Id = viewModel.DriverId,
-                        Driver_Name = viewModel.DriverName,
-                        Leave_Date = viewModel.LeaveDate ?? DateTime.Today,
-                        Leave_Count = viewModel.LeaveCount ?? 0,
-                        Leave_Type = viewModel.LeaveType?.ToUpper() ?? string.Empty,
-                        Leave_Month = viewModel.LeaveDate?.Month ?? DateTime.Today.Month,
-                        Remarks = viewModel.Remarks,
-                        Created_At = DateTime.Now
-                    };
+                    Driver_Id = viewModel.DriverId,
+                    Driver_Name = viewModel.DriverName,
+                    Leave_Date = viewModel.LeaveDate ?? DateTime.Today,
+                    Leave_Count = viewModel.LeaveCount ?? 0,
+                    Leave_Type = viewModel.LeaveType?.ToUpper() ?? string.Empty,
+                    Leave_Month = viewModel.LeaveDate?.Month ?? DateTime.Today.Month,
+                    Remarks = viewModel.Remarks,
+                    Created_At = DateTime.Now
+                };
 
-                    _db.IGH_Leave_Transactions.Add(newRecord);
-                    await _db.SaveChangesAsync();
+                _db.IGH_Leave_Transactions.Add(newRecord);
+                await _db.SaveChangesAsync();
 
-                    viewModel.Id = newRecord.Id;
-                    viewModel.CreatedAt = newRecord.Created_At;
-                    viewModel.LeaveMonth = newRecord.Leave_Month;
+                viewModel.Id = newRecord.Id;
+                viewModel.CreatedAt = newRecord.Created_At;
+                viewModel.LeaveMonth = newRecord.Leave_Month;
 
-                    _logger.LogInformation(
-                        "LeaveTransaction created Id={Id} by {User}",
-                        newRecord.Id, User.Identity?.Name);
-                }
+                _logger.LogInformation(
+                    "LeaveTransaction created Id={Id} by {User}",
+                    newRecord.Id, User.Identity?.Name);
 
-                return Json(new[] { viewModel }.ToDataSourceResult(request, ModelState));
+                return Json(new { Data = new[] { viewModel }, Total = 1 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "LeaveTransactionCreate failed");
-                ModelState.AddModelError("", ex.Message);
-                return Json(new[] { viewModel }.ToDataSourceResult(request, ModelState));
+                return Json(KendoGridResult<LeaveTransactionViewModel>.Error(ex.Message));
             }
         }
 
-        // ─────────────────────────────────────────────────────────
-        // POST: /IGH/LeaveTransactionDestroy
-        // ─────────────────────────────────────────────────────────
+        /* ════════════════════════════════════════════════════════════
+           POST: /IGH/LeaveTransactionDestroy
+        ════════════════════════════════════════════════════════════ */
         [HttpPost]
         public async Task<IActionResult> LeaveTransactionDestroy(
-            [DataSourceRequest] DataSourceRequest request,
-            LeaveTransactionViewModel viewModel)       // ← NO [FromBody]
+            [FromForm] LeaveTransactionViewModel viewModel)
         {
             try
             {
@@ -232,13 +262,12 @@ namespace ptc_IGH_Sys.Controllers
                     }
                 }
 
-                return Json(new[] { viewModel }.ToDataSourceResult(request, ModelState));
+                return Json(new { Data = new[] { viewModel }, Total = 1 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "LeaveTransactionDestroy failed Id={Id}", viewModel?.Id);
-                ModelState.AddModelError("", ex.Message);
-                return Json(new[] { viewModel }.ToDataSourceResult(request, ModelState));
+                return Json(KendoGridResult<LeaveTransactionViewModel>.Error(ex.Message));
             }
         }
     }

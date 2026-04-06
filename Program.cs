@@ -64,6 +64,7 @@ app.UseSession();           // ← must be before UseAuthentication
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");

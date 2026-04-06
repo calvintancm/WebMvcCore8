@@ -277,9 +277,7 @@
             });
 
             $('#btnKSwalSuccess').on('click', function () {
-                alert(typeof jQuery);
-                alert(typeof kendo);
-                 kendo.alert("Data saved successfully!");
+                kendo.alert("Kendo JS Script! -> " + kendo.version);
                 KSwal.success('Saved!', 'Gate entry recorded successfully.');
             });
 
@@ -312,7 +310,7 @@
 
                            /* ── Kendo Form Window ── */
                     $('#btnKendoForm').on('click', function () {
-                        kendo.alert("This demo shows.");
+                        kendo.alert("PTC Grid Demo Show.");
                         /* If window already exists, re-center and re-open */
                         var $win = $('#quickEntryWin');
                         if ($win.length) {

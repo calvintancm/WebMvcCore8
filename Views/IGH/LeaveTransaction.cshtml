@@ -78,7 +78,7 @@
 
             kendo.culture('en-GB');
 
-            /* ── Month DropDownList ──────────────────────────────── */
+            /* ── Month DropDownList ─────────────────────────────────── */
             $('#queryLeaveMonth').kendoDropDownList({
                 dataTextField:  'text',
                 dataValueField: 'value',
@@ -91,68 +91,77 @@
                     { text: 'Nov', value: 11 }, { text: 'Dec', value: 12 }
                 ],
                 optionLabel: 'All Months',
-                value:       new Date().getMonth() + 1,
-                change:      function () { refreshLeaveGrid(); }
+                value: new Date().getMonth() + 1
+                /* change handler added AFTER grid init */
             });
 
-            /* ── Year DropDownList ───────────────────────────────── */
+            /* ── Year DropDownList ──────────────────────────────────── */
             var cy = new Date().getFullYear();
             var yrs = [];
-            for (var y = cy - 2; y <= cy + 1; y++) { yrs.push({ text: String(y), value: y }); }
+            for (var y = cy - 2; y <= cy + 1; y++) {
+                yrs.push({ text: String(y), value: y });
+            }
 
             $('#queryLeaveYear').kendoDropDownList({
                 dataTextField:  'text',
                 dataValueField: 'value',
                 dataSource:     yrs,
-                value:          cy,
-                change:         function () { refreshLeaveGrid(); }
+                value:          cy
+                /* change handler added AFTER grid init */
             });
 
-            /* ── Enter key on driver name ────────────────────────── */
+            /* ── Enter key search ───────────────────────────────────── */
             $('#queryDriverName').on('keypress', function (e) {
                 if (e.which === 13) refreshLeaveGrid();
             });
 
-            /* ══════════════════════════════════════════════════════
+            /* ══════════════════════════════════════════════════════════
                KENDO GRID
-               KEY FIXES:
-               1. NO contentType:'application/json' on read
-               2. NO parameterMap on read transport
-               3. data: function() returns plain object
-                  → Kendo merges it with DataSourceRequest fields
-                  → POST as application/x-www-form-urlencoded
-                  → Controller binds leaveMonth / leaveYear / driverName normally
-            ══════════════════════════════════════════════════════ */
+               KEY CHANGES vs old approach:
+               1. NO type: 'aspnetmvc-ajax'  — not needed, avoids DataSourceRequest
+               2. parameterMap merges Kendo paging fields + custom filters
+               3. schema same as before: data:'Data', total:'Total'
+               4. [FromForm] KendoGridRequest on server reads page/pageSize/sort
+            ══════════════════════════════════════════════════════════ */
             $('#leave_grid').kendoGrid({
 
                 dataSource: {
-                    type: 'aspnetmvc-ajax',         /* ← tells Kendo to use MVC-style paging/sorting */
+                    /* ❌ NO type: 'aspnetmvc-ajax' — this triggers DataSourceRequest which crashes */
+
                     transport: {
                         read: {
                             url:  '@Url.Action("LeaveTransactionRead", "IGH")',
                             type: 'POST'
-                            /* NO contentType here — default is form-urlencoded which the controller can read */
-                            /* NO data: here — we use the grid-level parameterMap below instead */
+                            /* Default content-type is form-urlencoded — correct for [FromForm] */
                         },
                         update: {
                             url:  '@Url.Action("LeaveTransactionUpdate", "IGH")',
                             type: 'POST'
                         },
+                        create: {
+                            url:  '@Url.Action("LeaveTransactionCreate", "IGH")',
+                            type: 'POST'
+                        },
+                        destroy: {
+                            url:  '@Url.Action("LeaveTransactionDestroy", "IGH")',
+                            type: 'POST'
+                        },
+
                         parameterMap: function (data, operation) {
-                            /* For READ: merge DataSourceRequest fields with our custom filters */
                             if (operation === 'read') {
-                                var filters = getLeaveFilters();
-                                /* $.extend merges our filter object INTO the Kendo paging/sort data */
-                                return $.extend({}, data, filters);
+                                /* Merge Kendo paging/sort fields with your custom filters */
+                                /* Result posted as form fields — [FromForm] reads all of them */
+                                return $.extend({}, data, getLeaveFilters());
                             }
-                            /* For UPDATE: just return the model data as-is */
+                            /* update/create/destroy — return data as-is */
                             return data;
                         }
                     },
+
                     schema: {
-                        data:   'Data',
-                        total:  'Total',
-                        errors: 'Errors',
+                        data:   'Data',     /* matches KendoGridResult.Data   */
+                        total:  'Total',    /* matches KendoGridResult.Total  */
+                        errors: 'Errors',   /* matches KendoGridResult.Errors */
                         model: {
                             id: 'Id',
                             fields: {
@@ -160,7 +169,7 @@
                                 DriverId:   { type: 'number', editable: false },
                                 DriverName: { type: 'string', editable: false },
                                 LeaveDate:  { type: 'date'   },
-                                LeaveCount: { type: 'number', validation: { min: 0, max: 31 } },
+                                LeaveCount: { type: 'number', validation: { min: 0.5, max: 31 } },
                                 LeaveType:  { type: 'string' },
                                 LeaveMonth: { type: 'number', editable: false },
                                 Remarks:    { type: 'string' },
@@ -168,6 +177,7 @@
                             }
                         }
                     },
+
                     pageSize:      50,
                     serverPaging:  true,
                     serverSorting: true,
@@ -194,7 +204,8 @@
                         template: function (d) {
                             if (!d.LeaveDate) return '';
                             return '<span style="font-family:Sora,sans-serif;font-size:0.8rem;">'
-                                 + kendo.toString(kendo.parseDate(d.LeaveDate), 'dd-MMM-yyyy') + '</span>';
+                                 + kendo.toString(kendo.parseDate(d.LeaveDate), 'dd-MMM-yyyy')
+                                 + '</span>';
                         }
                     },
                     {
@@ -221,7 +232,8 @@
                     {
                         field: 'LeaveMonth', title: 'Month', width: 90,
                         template: function (d) {
-                            var m = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                            var m = ['','Jan','Feb','Mar','Apr','May','Jun',
+                                     'Jul','Aug','Sep','Oct','Nov','Dec'];
                             return m[d.LeaveMonth] || '';
                         },
                         attributes:       { style: 'text-align:center;' },
@@ -229,14 +241,16 @@
                     },
                     {
                         field: 'Remarks', title: 'Remarks', width: 220,
-                        template: '<span style="color:var(--text-secondary);font-size:0.82rem;">#: Remarks || \'\' #</span>'
+                        template: '<span style="color:var(--text-secondary);font-size:0.82rem;">' +
+                                  '#: Remarks || \'\' #</span>'
                     },
                     {
                         field: 'CreatedAt', title: 'Created At', width: 150,
                         template: function (d) {
                             if (!d.CreatedAt) return '';
                             return '<span style="font-size:0.78rem;color:var(--text-muted);">'
-                                 + kendo.toString(kendo.parseDate(d.CreatedAt), 'dd-MMM-yyyy HH:mm') + '</span>';
+                                 + kendo.toString(kendo.parseDate(d.CreatedAt), 'dd-MMM-yyyy HH:mm')
+                                 + '</span>';
                         }
                     },
                     {
@@ -253,7 +267,6 @@
                 sortable:   true,
                 scrollable: true,
                 height:     520,
-                filterable: false,
 
                 dataBound: function () {
                     this.thead.find('th').css({
@@ -270,37 +283,53 @@
                 }
             });
 
-            /* Initial load */
-            refreshLeaveGrid();
-        });
+            /* ── Add DDL change handlers AFTER grid is ready ────────── */
+            $('#queryLeaveMonth').data('kendoDropDownList').bind('change', function () {
+                refreshLeaveGrid();
+            });
+            $('#queryLeaveYear').data('kendoDropDownList').bind('change', function () {
+                refreshLeaveGrid();
+            });
 
-        /* ────────────────────────────────────────────────────────────
+            /* ── Initial load ───────────────────────────────────────── */
+            refreshLeaveGrid();
+
+        }); /* end document ready */
+
+
+        /* ════════════════════════════════════════════════════════════
            getLeaveFilters()
-           Returns a plain object. The parameterMap merges this with
-           Kendo's own DataSourceRequest fields (page, pageSize, sort etc.)
-           Result is posted as application/x-www-form-urlencoded so
-           the controller can bind leaveMonth / leaveYear / driverName.
-        ──────────────────────────────────────────────────────────── */
+           Returns your custom filter values as a plain object.
+           parameterMap merges this with Kendo's paging/sort fields.
+           Server receives everything as [FromForm] parameters.
+        ════════════════════════════════════════════════════════════ */
         function getLeaveFilters() {
             var monthDdl = $('#queryLeaveMonth').data('kendoDropDownList');
             var yearDdl  = $('#queryLeaveYear').data('kendoDropDownList');
 
-            var mVal = monthDdl ? monthDdl.value() : '';
-            var yVal = yearDdl  ? yearDdl.value()  : '';
+            var mVal = monthDdl ? parseInt(monthDdl.value()) : 0;
+            var yVal = yearDdl  ? parseInt(yearDdl.value())  : 0;
             var name = $('#queryDriverName').val().trim();
 
             return {
-                leaveMonth: (mVal !== '' && mVal !== null && mVal !== undefined) ? parseInt(mVal) : '',
-                leaveYear:  (yVal !== '' && yVal !== null && yVal !== undefined) ? parseInt(yVal) : '',
+                leaveMonth: isNaN(mVal) ? 0 : mVal,
+                leaveYear:  isNaN(yVal) ? 0 : yVal,
                 driverName: name
             };
         }
 
+        /* ════════════════════════════════════════════════════════════
+           refreshLeaveGrid()
+           Use query() — single request, no race condition
+        ════════════════════════════════════════════════════════════ */
         function refreshLeaveGrid() {
             var grid = $('#leave_grid').data('kendoGrid');
             if (!grid) return;
-            grid.dataSource.page(1);
-            grid.dataSource.read();
+            grid.dataSource.query({
+                page:     1,
+                pageSize: grid.dataSource.pageSize(),
+                sort:     grid.dataSource.sort()
+            });
         }
 
         function clearLeaveFilters() {
@@ -318,7 +347,7 @@
         }
 
         function openAddLeaveModal() {
-            KSwal.info('Add Leave', 'Add Leave form coming soon.');
+            KSwal.alert('Add Leave form coming soon.', 'Add Leave', 'info');
         }
 
         function handleGridError(e) {
@@ -327,10 +356,13 @@
                 var parts = [];
                 $.each(e.errors, function (k, v) {
                     if (v.errors) parts.push(v.errors.join('\n'));
+                    else if (typeof v === 'string') parts.push(v);
                 });
                 if (parts.length) msg = parts.join('\n');
             } else if (e.xhr) {
-                console.error('Leave grid error status:', e.xhr.status, e.xhr.responseText);
+                console.error('Grid error:', e.xhr.status, e.xhr.responseText);
+                if (e.xhr.status === 401) msg = 'Session expired. Please log in again.';
+                if (e.xhr.status === 403) msg = 'You do not have permission to view this data.';
                 if (e.xhr.status === 404) msg = 'Action not found. Check controller route.';
                 if (e.xhr.status === 500) msg = 'Server error. Check application logs.';
             }

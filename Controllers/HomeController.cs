@@ -18,6 +18,9 @@ namespace ptc_IGH_Sys.Controllers
             return View();
         }
 
+       
+        public IActionResult Grid() => View();
+
         public IActionResult Privacy()
         {
             return View();
