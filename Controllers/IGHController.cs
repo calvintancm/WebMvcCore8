@@ -21,65 +21,66 @@ namespace ptc_IGH_Sys.Controllers
 
         public IGHController(ApplicationDbContext db, ILogger<IGHController> logger)
         {
-            _db     = db;
+            _db = db;
             _logger = logger;
         }
 
-       
+        // ── Views ────────────────────────────────────────────────
         [HttpGet]
-        public IActionResult LeaveTransaction()
-        {
-            return View();
-        }
+        public IActionResult LeaveTransaction() => View();
 
         [HttpGet]
-        public IActionResult SalaryAdjustment()
-        {
-            return View();
-        }
+        public IActionResult SalaryAdjustment() => View();
 
-     
-        public IActionResult Smart()
-        {
-            return View(); // This will look for Views/IGH/Smart.cshtml
+        [HttpGet]
+        public IActionResult Smart() => View();
 
-        }
-
+        // ─────────────────────────────────────────────────────────
+        // POST: /IGH/LeaveTransactionRead
+        //
+        // WHY NO [FromBody] or [FromForm]:
+        //   type: 'aspnetmvc-ajax' in JS causes Kendo to POST as
+        //   application/x-www-form-urlencoded.
+        //   ASP.NET Core MVC binds form fields to simple parameters
+        //   (int?, string) automatically — no attribute needed.
+        //
+        // WHY [DataSourceRequest] works here:
+        //   It reads paging/sorting/filtering from the form body,
+        //   which Kendo posts alongside our custom leaveMonth etc.
+        // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> LeaveTransactionRead(
             [DataSourceRequest] DataSourceRequest request,
-            int?   leaveMonth  = null,
-            int?   leaveYear   = null,
-            string driverName  = null)
+            int? leaveMonth = null,
+            int? leaveYear = null,
+            string driverName = null)
         {
+            _logger.LogInformation(
+                "LeaveTransactionRead → month={M} year={Y} driver='{D}'",
+                leaveMonth, leaveYear, driverName);
+
             try
             {
-              
-                var query = _db.IGH_Leave_Transactions.AsNoTracking().AsQueryable();
-               
+                var query = _db.IGH_Leave_Transactions
+                    .AsNoTracking()
+                    .AsQueryable();
 
-                if (leaveYear.HasValue)
-                {
+                // ── Year filter ──
+                if (leaveYear.HasValue && leaveYear.Value > 0)
                     query = query.Where(x => x.Leave_Date.Year == leaveYear.Value);
-                }
 
-
+                // ── Month filter ──
                 if (leaveMonth.HasValue && leaveMonth.Value > 0)
-                {
                     query = query.Where(x => x.Leave_Date.Month == leaveMonth.Value);
-                }
 
-                Console.WriteLine($"Total records: {query.Count()}");
-
-
+                // ── Driver name filter (case-insensitive) ──
                 if (!string.IsNullOrWhiteSpace(driverName))
                 {
-                    var search = driverName.Trim().ToUpper();
+                    var term = driverName.Trim().ToUpper();
                     query = query.Where(x =>
                         x.Driver_Name != null &&
-                        x.Driver_Name.ToUpper().Contains(search));
+                        x.Driver_Name.ToUpper().Contains(term));
                 }
-
 
                 var projected = query
                     .OrderBy(x => x.Driver_Name)
@@ -90,40 +91,35 @@ namespace ptc_IGH_Sys.Controllers
                         DriverName = x.Driver_Name ?? string.Empty,
                         LeaveDate = x.Leave_Date,
                         LeaveCount = x.Leave_Count,
-                        LeaveType = x.Leave_Type ?? "Unknown",
+                        LeaveType = x.Leave_Type ?? string.Empty,
                         LeaveMonth = x.Leave_Month,
                         Remarks = x.Remarks ?? string.Empty,
-                        CreatedAt = x.Created_At,
-
-                       
+                        CreatedAt = x.Created_At
                     });
 
                 var result = await projected.ToDataSourceResultAsync(request);
-                Console.WriteLine($"leaveYear={leaveYear}, leaveMonth={leaveMonth}, driverName='{driverName}'");
-
                 return Json(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "LeaveTransactionRead failed");
                 ModelState.AddModelError("ServerError", ex.Message);
-
-                var empty = Array.Empty<LeaveTransactionViewModel>()
+                return Json(Array.Empty<LeaveTransactionViewModel>()
                     .AsQueryable()
-                    .ToDataSourceResult(request, ModelState);
-
-                return Json(empty);
+                    .ToDataSourceResult(request, ModelState));
             }
         }
 
         // ─────────────────────────────────────────────────────────
         // POST: /IGH/LeaveTransactionUpdate
-        // Called by Kendo Grid inline edit save
+        //
+        // NO [FromBody] — Kendo posts update as form-urlencoded.
+        // [FromBody] would break [DataSourceRequest] binding.
         // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> LeaveTransactionUpdate(
             [DataSourceRequest] DataSourceRequest request,
-            [FromBody] LeaveTransactionViewModel viewModel)
+            LeaveTransactionViewModel viewModel)       // ← NO [FromBody]
         {
             try
             {
@@ -138,19 +134,15 @@ namespace ptc_IGH_Sys.Controllers
                         return Json(new[] { viewModel }.ToDataSourceResult(request, ModelState));
                     }
 
-                    // Only update the editable fields
                     record.Leave_Count = viewModel.LeaveCount ?? 0;
-                    record.Leave_Type  = viewModel.LeaveType;
-                    record.Remarks     = viewModel.Remarks;
-                   // record.Updated_At  = DateTime.Now;
-                   // record.Updated_By  = User.Identity?.Name ?? "SYSTEM";
+                    record.Leave_Type = viewModel.LeaveType;
+                    record.Remarks = viewModel.Remarks;
 
                     await _db.SaveChangesAsync();
 
-                    // Return the full row (including read-only fields) back to the grid
                     viewModel.DriverName = record.Driver_Name;
-                    viewModel.CreatedAt  = record.Created_At;
-                    viewModel.LeaveDate  = record.Leave_Date;
+                    viewModel.CreatedAt = record.Created_At;
+                    viewModel.LeaveDate = record.Leave_Date;
                     viewModel.LeaveMonth = record.Leave_Month;
 
                     _logger.LogInformation(
@@ -162,19 +154,19 @@ namespace ptc_IGH_Sys.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "LeaveTransactionUpdate failed for Id={Id}", viewModel?.Id);
+                _logger.LogError(ex, "LeaveTransactionUpdate failed Id={Id}", viewModel?.Id);
                 ModelState.AddModelError("", ex.Message);
                 return Json(new[] { viewModel }.ToDataSourceResult(request, ModelState));
             }
         }
 
         // ─────────────────────────────────────────────────────────
-        // POST: /IGH/LeaveTransactionCreate   (optional — for Add)
+        // POST: /IGH/LeaveTransactionCreate
         // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> LeaveTransactionCreate(
             [DataSourceRequest] DataSourceRequest request,
-            [FromBody] LeaveTransactionViewModel viewModel)
+            LeaveTransactionViewModel viewModel)       // ← NO [FromBody]
         {
             try
             {
@@ -182,22 +174,20 @@ namespace ptc_IGH_Sys.Controllers
                 {
                     var newRecord = new IGH_Leave_Transaction
                     {
-                        Driver_Id   = viewModel.DriverId,
+                        Driver_Id = viewModel.DriverId,
                         Driver_Name = viewModel.DriverName,
-                        Leave_Date = viewModel.LeaveDate ?? DateTime.MinValue,   // fallback if null
-                        Leave_Count = viewModel.LeaveCount ?? 0,                 // fallback if null
+                        Leave_Date = viewModel.LeaveDate ?? DateTime.Today,
+                        Leave_Count = viewModel.LeaveCount ?? 0,
                         Leave_Type = viewModel.LeaveType?.ToUpper() ?? string.Empty,
-                        Leave_Month = viewModel.LeaveDate?.Month ?? 0,
-
+                        Leave_Month = viewModel.LeaveDate?.Month ?? DateTime.Today.Month,
                         Remarks = viewModel.Remarks,
-                        Created_At  = DateTime.Now,
-                        //Updated_By  = User.Identity?.Name ?? "SYSTEM"
+                        Created_At = DateTime.Now
                     };
 
                     _db.IGH_Leave_Transactions.Add(newRecord);
                     await _db.SaveChangesAsync();
 
-                    viewModel.Id        = newRecord.Id;
+                    viewModel.Id = newRecord.Id;
                     viewModel.CreatedAt = newRecord.Created_At;
                     viewModel.LeaveMonth = newRecord.Leave_Month;
 
@@ -217,12 +207,12 @@ namespace ptc_IGH_Sys.Controllers
         }
 
         // ─────────────────────────────────────────────────────────
-        // POST: /IGH/LeaveTransactionDestroy  (optional — for delete)
+        // POST: /IGH/LeaveTransactionDestroy
         // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> LeaveTransactionDestroy(
             [DataSourceRequest] DataSourceRequest request,
-            [FromBody] LeaveTransactionViewModel viewModel)
+            LeaveTransactionViewModel viewModel)       // ← NO [FromBody]
         {
             try
             {
@@ -246,7 +236,7 @@ namespace ptc_IGH_Sys.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "LeaveTransactionDestroy failed for Id={Id}", viewModel?.Id);
+                _logger.LogError(ex, "LeaveTransactionDestroy failed Id={Id}", viewModel?.Id);
                 ModelState.AddModelError("", ex.Message);
                 return Json(new[] { viewModel }.ToDataSourceResult(request, ModelState));
             }

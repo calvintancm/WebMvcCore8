@@ -1,7 +1,7 @@
 @{
-    ViewData["Title"]             = "Leave Transaction";
+    ViewData["Title"] = "Leave Transaction";
     ViewData["BreadcrumbSection"] = "IGH Management";
-    ViewData["BreadcrumbPage"]    = "Leave Transaction";
+    ViewData["BreadcrumbPage"] = "Leave Transaction";
 }
 
 <div class="page-header">
@@ -19,29 +19,26 @@
     </div>
 </div>
 
-
+@* ── Filter Card ── *@
 <div class="ptc-card mb-3">
     <div class="ptc-card-body" style="padding:16px 20px;">
         <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;">
 
             <div style="display:flex;flex-direction:column;gap:5px;min-width:160px;">
-                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">
-                    Month
-                </label>
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Month</label>
                 <select id="queryLeaveMonth" style="width:160px;"></select>
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:5px;min-width:160px;">
-                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">
-                    Year
-                </label>
+            <div style="display:flex;flex-direction:column;gap:5px;min-width:120px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Year</label>
                 <select id="queryLeaveYear" style="width:120px;"></select>
             </div>
 
             <div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:200px;">
-                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">
-                    Driver Name
-                </label>
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Driver Name</label>
                 <input type="text" id="queryDriverName"
                        class="k-textbox"
                        style="width:100%;max-width:280px;"
@@ -49,7 +46,7 @@
             </div>
 
             <div style="display:flex;gap:8px;padding-bottom:1px;">
-                <button class="btn-ptc-primary" onclick="refreshLeaveGrid()" id="btnSearch">
+                <button class="btn-ptc-primary" onclick="refreshLeaveGrid()">
                     <i class="bi bi-search"></i> Search
                 </button>
                 <button class="btn-ptc-outline" onclick="clearLeaveFilters()">
@@ -64,8 +61,7 @@
 <div class="ptc-card">
     <div class="ptc-card-header">
         <h2 class="ptc-card-title">
-            <i class="bi bi-calendar-check"></i>
-            Leave Records
+            <i class="bi bi-calendar-check"></i> Leave Records
         </h2>
         <span id="leaveRecordCount"
               style="font-size:0.75rem;color:var(--text-muted);background:#f1f5f9;
@@ -77,268 +73,268 @@
 </div>
 
 @section Scripts {
-<script>
-$(function () {
+    <script>
+        $(function () {
 
-    kendo.culture('en-GB');
+            kendo.culture('en-GB');
 
-    var months = [
-        { text: 'Jan', value: 1  }, { text: 'Feb', value: 2  },
-        { text: 'Mar', value: 3  }, { text: 'Apr', value: 4  },
-        { text: 'May', value: 5  }, { text: 'Jun', value: 6  },
-        { text: 'Jul', value: 7  }, { text: 'Aug', value: 8  },
-        { text: 'Sep', value: 9  }, { text: 'Oct', value: 10 },
-        { text: 'Nov', value: 11 }, { text: 'Dec', value: 12 }
-    ];
+            /* ── Month DropDownList ──────────────────────────────── */
+            $('#queryLeaveMonth').kendoDropDownList({
+                dataTextField:  'text',
+                dataValueField: 'value',
+                dataSource: [
+                    { text: 'Jan', value: 1  }, { text: 'Feb', value: 2  },
+                    { text: 'Mar', value: 3  }, { text: 'Apr', value: 4  },
+                    { text: 'May', value: 5  }, { text: 'Jun', value: 6  },
+                    { text: 'Jul', value: 7  }, { text: 'Aug', value: 8  },
+                    { text: 'Sep', value: 9  }, { text: 'Oct', value: 10 },
+                    { text: 'Nov', value: 11 }, { text: 'Dec', value: 12 }
+                ],
+                optionLabel: 'All Months',
+                value:       new Date().getMonth() + 1,
+                change:      function () { refreshLeaveGrid(); }
+            });
 
-    $('#queryLeaveMonth').kendoDropDownList({
-        dataTextField:  'text',
-        dataValueField: 'value',
-        dataSource:     months,
-        optionLabel:    'All Months',
-        value:          new Date().getMonth() + 1   // default = current month
-    });
+            /* ── Year DropDownList ───────────────────────────────── */
+            var cy = new Date().getFullYear();
+            var yrs = [];
+            for (var y = cy - 2; y <= cy + 1; y++) { yrs.push({ text: String(y), value: y }); }
 
-    var currentYear = new Date().getFullYear();
-    var years = [];
-    for (var y = currentYear - 2; y <= currentYear + 1; y++) {
-        years.push({ text: String(y), value: y });
-    }
+            $('#queryLeaveYear').kendoDropDownList({
+                dataTextField:  'text',
+                dataValueField: 'value',
+                dataSource:     yrs,
+                value:          cy,
+                change:         function () { refreshLeaveGrid(); }
+            });
 
-    $('#queryLeaveYear').kendoDropDownList({
-        dataTextField:  'text',
-        dataValueField: 'value',
-        dataSource:     years,
-        value:          currentYear
-    });
+            /* ── Enter key on driver name ────────────────────────── */
+            $('#queryDriverName').on('keypress', function (e) {
+                if (e.which === 13) refreshLeaveGrid();
+            });
 
-    $('#queryDriverName').on('keypress', function (e) {
-        if (e.which === 13) refreshLeaveGrid();
-    });
+            /* ══════════════════════════════════════════════════════
+               KENDO GRID
+               KEY FIXES:
+               1. NO contentType:'application/json' on read
+               2. NO parameterMap on read transport
+               3. data: function() returns plain object
+                  → Kendo merges it with DataSourceRequest fields
+                  → POST as application/x-www-form-urlencoded
+                  → Controller binds leaveMonth / leaveYear / driverName normally
+            ══════════════════════════════════════════════════════ */
+            $('#leave_grid').kendoGrid({
 
-    $('#leave_grid').kendoGrid({
-        dataSource: {
-            type:     'json',
-            transport: {
-                read: {
-                    url:         '@Url.Action("LeaveTransactionRead", "IGH")',
-                    type:        'POST',
-                    contentType: 'application/json',
-                    data:        getLeaveFilters
+                dataSource: {
+                    type: 'aspnetmvc-ajax',         /* ← tells Kendo to use MVC-style paging/sorting */
+                    transport: {
+                        read: {
+                            url:  '@Url.Action("LeaveTransactionRead", "IGH")',
+                            type: 'POST'
+                            /* NO contentType here — default is form-urlencoded which the controller can read */
+                            /* NO data: here — we use the grid-level parameterMap below instead */
+                        },
+                        update: {
+                            url:  '@Url.Action("LeaveTransactionUpdate", "IGH")',
+                            type: 'POST'
+                        },
+                        parameterMap: function (data, operation) {
+                            /* For READ: merge DataSourceRequest fields with our custom filters */
+                            if (operation === 'read') {
+                                var filters = getLeaveFilters();
+                                /* $.extend merges our filter object INTO the Kendo paging/sort data */
+                                return $.extend({}, data, filters);
+                            }
+                            /* For UPDATE: just return the model data as-is */
+                            return data;
+                        }
+                    },
+                    schema: {
+                        data:   'Data',
+                        total:  'Total',
+                        errors: 'Errors',
+                        model: {
+                            id: 'Id',
+                            fields: {
+                                Id:         { type: 'number', editable: false },
+                                DriverId:   { type: 'number', editable: false },
+                                DriverName: { type: 'string', editable: false },
+                                LeaveDate:  { type: 'date'   },
+                                LeaveCount: { type: 'number', validation: { min: 0, max: 31 } },
+                                LeaveType:  { type: 'string' },
+                                LeaveMonth: { type: 'number', editable: false },
+                                Remarks:    { type: 'string' },
+                                CreatedAt:  { type: 'date',   editable: false }
+                            }
+                        }
+                    },
+                    pageSize:      50,
+                    serverPaging:  true,
+                    serverSorting: true,
+                    sort: { field: 'DriverName', dir: 'asc' },
+
+                    requestEnd: function (e) {
+                        if (e.type === 'read' && e.response) {
+                            var total = e.response.Total || 0;
+                            $('#leaveRecordCount').text(
+                                total + ' record' + (total !== 1 ? 's' : ''));
+                        }
+                    },
+                    error: function (e) { handleGridError(e); }
                 },
-                update: {
-                    url:         '@Url.Action("LeaveTransactionUpdate", "IGH")',
-                    type:        'POST',
-                    contentType: 'application/json'
-                },
-                parameterMap: function (data, operation) {
-                    return JSON.stringify(data);
-                }
-            },
-            schema: {
-                data:   'Data',
-                total:  'Total',
-                errors: 'Errors',
-                model: {
-                    id: 'Id',
-                    fields: {
-                        Id:         { type: 'number', editable: false },
-                        DriverId:   { type: 'number', editable: false },
-                        DriverName: { type: 'string', editable: false },
-                        LeaveDate:  { type: 'date'   },
-                        LeaveCount: { type: 'number', validation: { min: 0, max: 31 } },
-                        LeaveType:  { type: 'string' },
-                        LeaveMonth: { type: 'number', editable: false },
-                        Remarks:    { type: 'string' },
-                        CreatedAt:  { type: 'date',   editable: false }
-                    }
-                }
-            },
-            pageSize: 50,
-            serverPaging:  true,
-            serverSorting: true,
-            sort: { field: 'DriverName', dir: 'asc' },
-            requestEnd: function (e) {
-                if (e.type === 'read' && e.response) {
-                    var total = e.response.Total || 0;
-                    $('#leaveRecordCount').text(total + ' record' + (total !== 1 ? 's' : ''));
-                }
-            },
-            error: function (e) {
-                handleGridError(e);
-            }
-        },
 
-        columns: [
-            { field: 'Id',         hidden: true },
-            {
-                field: 'DriverName', title: 'Driver Name', width: 220,
-                template: '<span style="font-weight:600;">#: DriverName #</span>'
-            },
-            {
-                field: 'LeaveDate', title: 'Leave Date', width: 130,
-                format: '{0:dd-MMM-yyyy}',
-                template: function (d) {
-                    if (!d.LeaveDate) return '';
-                    var dt = kendo.parseDate(d.LeaveDate);
-                    return '<span style="font-family:\'Sora\',sans-serif;font-size:0.8rem;">'
-                         + kendo.toString(dt, 'dd-MMM-yyyy') + '</span>';
-                }
-            },
-            {
-                field: 'LeaveCount', title: 'Days', width: 80,
-                template: '<span style="font-weight:700;color:var(--accent);">#: LeaveCount #</span>',
-                attributes: { style: 'text-align:center;' },
-                headerAttributes: { style: 'text-align:center;' }
-            },
-            {
-                field: 'LeaveType', title: 'Leave Type', width: 140,
-                template: function (d) {
-                    if (!d.LeaveType) return '';
-                    var colors = {
-                        'AL':  ['#dbeafe','#1d4ed8'],
-                        'MC':  ['#dcfce7','#15803d'],
-                        'UL':  ['#fef3c7','#92400e'],
-                        'EL':  ['#f3e8ff','#7e22ce'],
-                        'PH':  ['#ffe4e6','#be123c']
-                    };
-                    var c = colors[d.LeaveType.toUpperCase()] || ['#f1f5f9','#475569'];
-                    return '<span style="background:' + c[0] + ';color:' + c[1]
-                         + ';font-size:0.7rem;font-weight:700;padding:2px 9px;'
-                         + 'border-radius:20px;">' + d.LeaveType + '</span>';
-                }
-            },
-            {
-                field: 'LeaveMonth', title: 'Month', width: 90,
-                template: function (d) {
-                    var m = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                    return m[d.LeaveMonth] || '';
-                },
-                attributes: { style: 'text-align:center;' },
-                headerAttributes: { style: 'text-align:center;' }
-            },
-            {
-                field: 'Remarks', title: 'Remarks', width: 220,
-                template: '<span style="color:var(--text-secondary);font-size:0.82rem;">#: Remarks || \'\' #</span>'
-            },
-            {
-                field: 'CreatedAt', title: 'Created At', width: 150,
-                format: '{0:dd-MMM-yyyy HH:mm}',
-                template: function (d) {
-                    if (!d.CreatedAt) return '';
-                    var dt = kendo.parseDate(d.CreatedAt);
-                    return '<span style="font-size:0.78rem;color:var(--text-muted);">'
-                         + kendo.toString(dt, 'dd-MMM-yyyy HH:mm') + '</span>';
-                }
-            },
-            {
-                command: [
+                columns: [
+                    { field: 'Id', hidden: true },
                     {
-                        name: 'edit',
-                        text: { edit: ' Edit', update: ' Save', cancel: ' Cancel' },
-                        iconClass: { edit: 'k-icon k-i-edit', update: 'k-icon k-i-check', cancel: 'k-icon k-i-cancel' }
+                        field: 'DriverName', title: 'Driver Name', width: 220,
+                        template: '<span style="font-weight:600;">#: DriverName #</span>'
+                    },
+                    {
+                        field: 'LeaveDate', title: 'Leave Date', width: 130,
+                        template: function (d) {
+                            if (!d.LeaveDate) return '';
+                            return '<span style="font-family:Sora,sans-serif;font-size:0.8rem;">'
+                                 + kendo.toString(kendo.parseDate(d.LeaveDate), 'dd-MMM-yyyy') + '</span>';
+                        }
+                    },
+                    {
+                        field: 'LeaveCount', title: 'Days', width: 80,
+                        template: '<span style="font-weight:700;color:var(--accent);">#: LeaveCount #</span>',
+                        attributes:       { style: 'text-align:center;' },
+                        headerAttributes: { style: 'text-align:center;' }
+                    },
+                    {
+                        field: 'LeaveType', title: 'Leave Type', width: 140,
+                        template: function (d) {
+                            if (!d.LeaveType) return '';
+                            var colors = {
+                                'AL': ['#dbeafe','#1d4ed8'], 'MC': ['#dcfce7','#15803d'],
+                                'UL': ['#fef3c7','#92400e'], 'EL': ['#f3e8ff','#7e22ce'],
+                                'PH': ['#ffe4e6','#be123c']
+                            };
+                            var c = colors[d.LeaveType.toUpperCase()] || ['#f1f5f9','#475569'];
+                            return '<span style="background:' + c[0] + ';color:' + c[1]
+                                 + ';font-size:0.7rem;font-weight:700;padding:2px 9px;'
+                                 + 'border-radius:20px;">' + d.LeaveType + '</span>';
+                        }
+                    },
+                    {
+                        field: 'LeaveMonth', title: 'Month', width: 90,
+                        template: function (d) {
+                            var m = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                            return m[d.LeaveMonth] || '';
+                        },
+                        attributes:       { style: 'text-align:center;' },
+                        headerAttributes: { style: 'text-align:center;' }
+                    },
+                    {
+                        field: 'Remarks', title: 'Remarks', width: 220,
+                        template: '<span style="color:var(--text-secondary);font-size:0.82rem;">#: Remarks || \'\' #</span>'
+                    },
+                    {
+                        field: 'CreatedAt', title: 'Created At', width: 150,
+                        template: function (d) {
+                            if (!d.CreatedAt) return '';
+                            return '<span style="font-size:0.78rem;color:var(--text-muted);">'
+                                 + kendo.toString(kendo.parseDate(d.CreatedAt), 'dd-MMM-yyyy HH:mm') + '</span>';
+                        }
+                    },
+                    {
+                        command: [{
+                            name: 'edit',
+                            text: { edit: ' Edit', update: ' Save', cancel: ' Cancel' }
+                        }],
+                        title: 'Action', width: 160
                     }
                 ],
-                title: 'Action', width: 160
-            }
-        ],
 
-        editable:  'inline',
-        pageable: {
-            pageSize:    50,
-            pageSizes:   [25, 50, 100],
-            buttonCount: 5,
-            info:        true,
-            messages: {
-                display:    '{0}-{1} of {2} records',
-                itemsPerPage: 'per page'
-            }
-        },
-        sortable:   true,
-        scrollable: true,
-        height:     520,
-        filterable: false,
+                editable:   'inline',
+                pageable:   { pageSize: 50, pageSizes: [25, 50, 100], buttonCount: 5 },
+                sortable:   true,
+                scrollable: true,
+                height:     520,
+                filterable: false,
 
-        /* Style header */
-        dataBound: function () {
-            this.thead.find('th').css({
-                'background':   '#f8fafc',
-                'font-weight':  '600',
-                'font-size':    '0.77rem',
-                'color':        '#475569',
-                'border-color': '#e2e8f0'
+                dataBound: function () {
+                    this.thead.find('th').css({
+                        'background':   '#f8fafc',
+                        'font-weight':  '600',
+                        'font-size':    '0.77rem',
+                        'color':        '#475569',
+                        'border-color': '#e2e8f0'
+                    });
+                },
+
+                save: function () {
+                    KSwal.toast('success', 'Leave record updated.');
+                }
             });
-        },
 
-        save: function () {
-            KSwal.toast('success', 'Leave record updated.');
-        },
-
-        saveChanges: function () {
-            KSwal.toast('success', 'Changes saved successfully.');
-        }
-    });
-
- 
-    refreshLeaveGrid();
-});
-
-
-function getLeaveFilters() {
-    return {
-        leaveMonth:  $('#queryLeaveMonth').data('kendoDropDownList')
-                         ? $('#queryLeaveMonth').data('kendoDropDownList').value() || null
-                         : null,
-        leaveYear:   $('#queryLeaveYear').data('kendoDropDownList')
-                         ? parseInt($('#queryLeaveYear').data('kendoDropDownList').value()) || null
-                         : null,
-        driverName:  $('#queryDriverName').val().trim() || null
-    };
-}
-
-function refreshLeaveGrid() {
-    var grid = $('#leave_grid').data('kendoGrid');
-    if (grid) {
-        grid.dataSource.page(1);    // reset to page 1
-        grid.dataSource.read();
-    }
-}
-
-function clearLeaveFilters() {
-    var monthDdl = $('#queryLeaveMonth').data('kendoDropDownList');
-    var yearDdl  = $('#queryLeaveYear').data('kendoDropDownList');
-    if (monthDdl) monthDdl.value('');
-    if (yearDdl)  yearDdl.value(new Date().getFullYear());
-    $('#queryDriverName').val('');
-    refreshLeaveGrid();
-}
-
-function exportLeaveGrid() {
-    var grid = $('#leave_grid').data('kendoGrid');
-    if (grid) {
-        grid.saveAsExcel();
-        KSwal.toast('info', 'Exporting leave records...');
-    }
-}
-
-
-function openAddLeaveModal() {
-    KSwal.info('Add Leave', 'Add Leave form coming soon.');
-}
-
-function handleGridError(e) {
-    var msg = 'An error occurred.';
-    if (e.errors) {
-        var parts = [];
-        $.each(e.errors, function (key, val) {
-            if (val.errors) parts.push(val.errors.join('\n'));
+            /* Initial load */
+            refreshLeaveGrid();
         });
-        if (parts.length) msg = parts.join('\n');
-    } else if (e.xhr && e.xhr.responseText) {
-        msg = 'Server error. Please try again.';
-        console.error('Grid error:', e.xhr.responseText);
-    }
-    KSwal.error('Grid Error', msg);
-}
-</script>
+
+        /* ────────────────────────────────────────────────────────────
+           getLeaveFilters()
+           Returns a plain object. The parameterMap merges this with
+           Kendo's own DataSourceRequest fields (page, pageSize, sort etc.)
+           Result is posted as application/x-www-form-urlencoded so
+           the controller can bind leaveMonth / leaveYear / driverName.
+        ──────────────────────────────────────────────────────────── */
+        function getLeaveFilters() {
+            var monthDdl = $('#queryLeaveMonth').data('kendoDropDownList');
+            var yearDdl  = $('#queryLeaveYear').data('kendoDropDownList');
+
+            var mVal = monthDdl ? monthDdl.value() : '';
+            var yVal = yearDdl  ? yearDdl.value()  : '';
+            var name = $('#queryDriverName').val().trim();
+
+            return {
+                leaveMonth: (mVal !== '' && mVal !== null && mVal !== undefined) ? parseInt(mVal) : '',
+                leaveYear:  (yVal !== '' && yVal !== null && yVal !== undefined) ? parseInt(yVal) : '',
+                driverName: name
+            };
+        }
+
+        function refreshLeaveGrid() {
+            var grid = $('#leave_grid').data('kendoGrid');
+            if (!grid) return;
+            grid.dataSource.page(1);
+            grid.dataSource.read();
+        }
+
+        function clearLeaveFilters() {
+            var monthDdl = $('#queryLeaveMonth').data('kendoDropDownList');
+            var yearDdl  = $('#queryLeaveYear').data('kendoDropDownList');
+            if (monthDdl) monthDdl.value('');
+            if (yearDdl)  yearDdl.value(new Date().getFullYear());
+            $('#queryDriverName').val('');
+            refreshLeaveGrid();
+        }
+
+        function exportLeaveGrid() {
+            var grid = $('#leave_grid').data('kendoGrid');
+            if (grid) { grid.saveAsExcel(); KSwal.toast('info', 'Exporting...'); }
+        }
+
+        function openAddLeaveModal() {
+            KSwal.info('Add Leave', 'Add Leave form coming soon.');
+        }
+
+        function handleGridError(e) {
+            var msg = 'An error occurred loading leave records.';
+            if (e.errors) {
+                var parts = [];
+                $.each(e.errors, function (k, v) {
+                    if (v.errors) parts.push(v.errors.join('\n'));
+                });
+                if (parts.length) msg = parts.join('\n');
+            } else if (e.xhr) {
+                console.error('Leave grid error status:', e.xhr.status, e.xhr.responseText);
+                if (e.xhr.status === 404) msg = 'Action not found. Check controller route.';
+                if (e.xhr.status === 500) msg = 'Server error. Check application logs.';
+            }
+            KSwal.error('Grid Error', msg);
+        }
+    </script>
 }
