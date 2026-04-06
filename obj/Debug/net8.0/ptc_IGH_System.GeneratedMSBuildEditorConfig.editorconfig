@@ -80,12 +80,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9Mb2dpblBhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/PTC/EDPUnity/ptc_IGH_system/Views/Shared/_Navigation - Copy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZpZ2F0aW9uIC0gQ29weS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/PTC/EDPUnity/ptc_IGH_system/Views/Shared/_Navigation.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZpZ2F0aW9uLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/PTC/EDPUnity/ptc_IGH_system/Views/Shared/_Navigation1.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZpZ2F0aW9uMS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/PTC/EDPUnity/ptc_IGH_system/Views/Shared/_Navigation2.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZpZ2F0aW9uMi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/PTC/EDPUnity/ptc_IGH_system/Views/Shared/_ValidationScriptsPartial.cshtml]

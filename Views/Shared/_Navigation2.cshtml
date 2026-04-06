@@ -1,16 +1,13 @@
 @* ═══════════════════════════════════════════
    _Navigation.cshtml — Left Sidebar
-   FIXED: Submenu correctly hidden on collapse
-          AND correctly restored on expand
-   ROOT CAUSE: hideAllSubmenus() removed Bootstrap
-   'show' class but showAllSubmenus() never
-   restored it — so click on parent did nothing
-   after expand.
-   FIX: Save which submenus were open BEFORE
-        collapsing, then restore them on expand.
+   FIXED: submenu icons always visible after collapse toggle
+   FIXED: Sign Out calls KSwal safely after scripts load
 ═══════════════════════════════════════════ *@
 <style>
 
+    /* ══════════════════════════════════════════
+       SIDEBAR BASE
+    ══════════════════════════════════════════ */
     #sidebar {
         position: fixed;
         top: 0; left: 0; bottom: 0;
@@ -24,6 +21,7 @@
 
     body.sidebar-collapsed #sidebar { width: var(--sidebar-w-collapsed); }
 
+    /* ── Brand ─────────────────────────────── */
     .sb-brand {
         display: flex; align-items: center; gap: 12px;
         padding: 0 17px; height: var(--topbar-h);
@@ -54,8 +52,10 @@
     }
 
     .sb-brand-sub { font-size: 0.67rem; color: var(--sb-text); letter-spacing: 0.04em; }
+
     body.sidebar-collapsed .sb-brand-text { opacity: 0; max-width: 0; }
 
+    /* ── Scroll area ────────────────────────── */
     .sb-nav {
         flex: 1; overflow-y: auto; overflow-x: hidden;
         padding: 8px 0;
@@ -68,6 +68,7 @@
     .sb-nav::-webkit-scrollbar-thumb { background: var(--sb-hover); border-radius: 3px; }
     .sb-nav ul { list-style: none; padding: 0; margin: 0; }
 
+    /* ── Section titles ─────────────────────── */
     .sb-section-title {
         padding: 13px 20px 4px;
         font-size: 0.68rem; font-weight: 700;
@@ -82,6 +83,9 @@
         opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0;
     }
 
+    /* ══════════════════════════════════════════
+       NAV LINK BASE
+    ══════════════════════════════════════════ */
     .sb-nav-link {
         display: flex; align-items: center; gap: 11px;
         padding: 10px 17px;
@@ -101,14 +105,28 @@
         width: 3px; background: var(--sb-active-line); border-radius: 0 3px 3px 0;
     }
 
-    /* Icons — NEVER hidden */
+    /* ══════════════════════════════════════════
+       ICONS
+       Rule: icons are NEVER hidden — only labels,
+       badges and chevrons collapse.
+    ══════════════════════════════════════════ */
     .sb-nav-icon {
-        width: 22px; min-width: 22px; flex-shrink: 0;
-        font-size: 15px; text-align: center;
-        display: flex; align-items: center; justify-content: center;
-        opacity: 1; visibility: visible; overflow: visible;
+        /* Fixed dimensions — flex cannot shrink this */
+        width: 22px;
+        min-width: 22px;
+        flex-shrink: 0;
+        font-size: 15px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Permanently visible */
+        opacity: 1;
+        visibility: visible;
+        overflow: visible;
     }
 
+    /* ── Labels, badges, chevrons ───────────── */
     .sb-nav-label {
         font-size: 0.9rem; font-weight: 500;
         flex: 1; color: inherit;
@@ -137,24 +155,41 @@
 
     .sb-nav-link[aria-expanded="true"] .sb-chevron { transform: rotate(90deg); }
 
-    /* Collapsed — hide labels only, never icons */
+    /* ══════════════════════════════════════════
+       COLLAPSED STATE
+       ONLY touch labels / badges / chevrons.
+       Do NOT touch .sb-nav-icon at all.
+    ══════════════════════════════════════════ */
     body.sidebar-collapsed .sb-nav-label,
     body.sidebar-collapsed .sb-badge,
     body.sidebar-collapsed .sb-chevron {
-        opacity: 0; max-width: 0; pointer-events: none;
+        opacity: 0;
+        max-width: 0;
+        pointer-events: none;
     }
 
+    /* Center the link around its icon */
     body.sidebar-collapsed .sb-nav > ul > li > .sb-nav-link,
     body.sidebar-collapsed .sb-footer-nav .sb-nav-link {
-        justify-content: center; padding: 10px 0; gap: 0;
+        justify-content: center;
+        padding: 10px 0;
+        gap: 0;
     }
 
+    /* Icon slightly larger on collapsed rail — TOP LEVEL ONLY */
     body.sidebar-collapsed .sb-nav > ul > li > .sb-nav-link .sb-nav-icon,
     body.sidebar-collapsed .sb-footer-nav .sb-nav-link .sb-nav-icon {
-        font-size: 18px; width: 22px; min-width: 22px;
+        font-size: 18px;
+        width: 22px;
+        min-width: 22px;
     }
 
-    /* Submenu */
+    /* ── Submenus hidden when sidebar collapsed ── */
+    body.sidebar-collapsed .sb-submenu { display: none !important; }
+
+    /* ══════════════════════════════════════════
+       SUBMENU
+    ══════════════════════════════════════════ */
     .sb-submenu {
         list-style: none; margin: 0; padding: 3px 0;
         background: var(--sb-bg-deep);
@@ -172,62 +207,81 @@
     .sb-submenu .sb-nav-link.active { opacity: 1; background: rgba(255,255,255,0.09); }
     .sb-submenu .sb-nav-link.active::before { display: none; }
 
+    /*
+     * SUBMENU ICONS — explicit, high-specificity block.
+     * These must NEVER be overridden by collapsed-state rules
+     * because the entire submenu is hidden when collapsed anyway.
+     */
     .sb-submenu .sb-nav-link .sb-nav-icon {
-        width: 18px !important; min-width: 18px !important;
+        width: 18px !important;
+        min-width: 18px !important;
         font-size: 13px !important;
-        opacity: 1 !important; visibility: visible !important;
-        overflow: visible !important; flex-shrink: 0 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        overflow: visible !important;
+        flex-shrink: 0 !important;
         color: var(--sb-text);
         display: flex !important;
-        align-items: center !important; justify-content: center !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     .sb-submenu .sb-nav-link:hover  .sb-nav-icon,
     .sb-submenu .sb-nav-link.active .sb-nav-icon {
-        color: var(--sb-active-line); opacity: 1 !important;
+        color: var(--sb-active-line);
+        opacity: 1 !important;
     }
 
+    /* Submenu labels are always fully visible (submenu hidden on collapse anyway) */
     .sb-submenu .sb-nav-link .sb-nav-label {
         font-size: 0.835rem; font-weight: 400;
-        opacity: 1 !important; max-width: 200px !important; overflow: hidden;
+        opacity: 1 !important;
+        max-width: 200px !important;
+        overflow: hidden;
     }
 
     .sb-submenu .sb-nav-link.active .sb-nav-label { font-weight: 600; }
 
-    /* Tooltips — show on ALL top-level items when collapsed */
+    /* ══════════════════════════════════════════
+       TOOLTIPS (collapsed sidebar, top-level only)
+    ══════════════════════════════════════════ */
     body.sidebar-collapsed [data-ptc-tooltip] { position: relative; }
 
     body.sidebar-collapsed [data-ptc-tooltip]:hover::after {
         content: attr(data-ptc-tooltip);
         position: absolute;
-        left: calc(var(--sidebar-w-collapsed) + 12px);
+        left: calc(var(--sidebar-w-collapsed) + 10px);
         top: 50%; transform: translateY(-50%);
         background: #1a2535; color: #f0f6ff;
-        padding: 6px 14px; border-radius: 8px;
+        padding: 5px 12px; border-radius: 7px;
         font-size: 0.78rem; white-space: nowrap;
         z-index: 9999; pointer-events: none;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.35);
         font-family: 'DM Sans', sans-serif;
         font-weight: 500; letter-spacing: 0.01em;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.08);
     }
 
     body.sidebar-collapsed [data-ptc-tooltip]:hover::before {
         content: '';
         position: absolute;
-        left: calc(var(--sidebar-w-collapsed) + 5px);
+        left: calc(var(--sidebar-w-collapsed) + 4px);
         top: 50%; transform: translateY(-50%);
-        border: 6px solid transparent;
+        border: 5px solid transparent;
         border-right-color: #1a2535;
         z-index: 9999; pointer-events: none;
     }
 
+    /* ── Sidebar footer ─────────────────────── */
     .sb-footer-nav {
         padding: 8px 0 6px;
         border-top: 1px solid var(--sb-border);
         flex-shrink: 0;
     }
 
+    /* ══════════════════════════════════════════
+       MOBILE
+    ══════════════════════════════════════════ */
     @@media (max-width: 768px) {
         #sidebar {
             width: var(--sidebar-w) !important;
@@ -244,18 +298,23 @@
         body.mobile-open .sb-badge,
         body.mobile-open .sb-chevron,
         body.mobile-open .sb-section-title {
-            opacity: 1 !important; max-width: 200px !important; overflow: visible !important;
+            opacity: 1 !important;
+            max-width: 200px !important;
+            overflow: visible !important;
         }
 
         body.mobile-open .sb-nav > ul > li > .sb-nav-link,
         body.mobile-open .sb-footer-nav .sb-nav-link {
             justify-content: flex-start !important;
-            padding: 10px 17px !important; gap: 11px !important;
+            padding: 10px 17px !important;
+            gap: 11px !important;
         }
 
         body.mobile-open .sb-nav > ul > li > .sb-nav-link .sb-nav-icon,
         body.mobile-open .sb-footer-nav .sb-nav-link .sb-nav-icon {
-            font-size: 15px !important; width: 22px !important; min-width: 22px !important;
+            font-size: 15px !important;
+            width: 22px !important;
+            min-width: 22px !important;
         }
 
         body.mobile-open .sb-submenu { display: block !important; }
@@ -264,6 +323,7 @@
 
 <nav id="sidebar">
 
+    @* ── Brand ── *@
     <a class="sb-brand" href="/Home/Index">
         <div class="sb-brand-icon"><i class="bi bi-truck"></i></div>
         <div class="sb-brand-text">
@@ -272,9 +332,11 @@
         </div>
     </a>
 
+    @* ── Navigation ── *@
     <div class="sb-nav">
         <ul>
 
+            @* MAIN *@
             <li class="sb-section-title">Main</li>
             <li>
                 <a class="sb-nav-link" href="/Home/Index" data-ptc-tooltip="Dashboard">
@@ -283,67 +345,85 @@
                 </a>
             </li>
 
+            @* Attendance & Leave *@
             <li class="sb-section-title">Data Management</li>
-
             <li>
                 <button class="sb-nav-link" data-bs-toggle="collapse"
-                        data-bs-target="#menuSyncData" aria-expanded="false"
-                        data-ptc-tooltip="Sync Data">
-                    <span class="sb-nav-icon"><i class="bi bi-arrow-repeat"></i></span>
+                        data-bs-target="#menuGateIn" aria-expanded="false"
+                        data-ptc-tooltip="Gate In">
+                    <span class="sb-nav-icon"><i class="bi bi-box-arrow-in-right"></i></span>
                     <span class="sb-nav-label">Sync Data</span>
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
-                <ul class="collapse sb-submenu" id="menuSyncData">
+                <ul class="collapse sb-submenu" id="menuGateIn">
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Import Trip Data">
-                            <span class="sb-nav-icon"><i class="bi bi-cloud-download"></i></span>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-plus-circle"></i></span>
                             <span class="sb-nav-label">Import Trip Data</span>
                         </a>
                     </li>
-                    <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Sync History">
-                            <span class="sb-nav-icon"><i class="bi bi-clock-history"></i></span>
-                            <span class="sb-nav-label">Sync History</span>
-                        </a>
-                    </li>
+                   
                 </ul>
-            </li>
+            </li> 
 
             <li>
                 <button class="sb-nav-link" data-bs-toggle="collapse"
-                        data-bs-target="#menuPayroll" aria-expanded="false"
-                        data-ptc-tooltip="Payroll Processing">
-                    <span class="sb-nav-icon"><i class="bi bi-cash-stack"></i></span>
+                        data-bs-target="#menuGateOut" aria-expanded="false"
+                        data-ptc-tooltip="Payroll">
+                    <span class="sb-nav-icon"><i class="bi bi-box-arrow-right"></i></span>
                     <span class="sb-nav-label">Payroll Processing</span>
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
-                <ul class="collapse sb-submenu" id="menuPayroll">
+                <ul class="collapse sb-submenu" id="menuGateOut">
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Salary Adjustments">
-                            <span class="sb-nav-icon"><i class="bi bi-currency-dollar"></i></span>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-plus-circle"></i></span>
                             <span class="sb-nav-label">Salary Adjustments</span>
                         </a>
                     </li>
-                    <li>
-                        <a class="sb-nav-link"
-                           asp-controller="IGH"
-                           asp-action="LeaveTransaction"
-                           data-ptc-tooltip="Leave Transaction">
-                            <span class="sb-nav-icon"><i class="bi bi-calendar-x"></i></span>
-                            <span class="sb-nav-label">Leave Transaction</span>
-                        </a>
-                    </li>
-
+                   
                 </ul>
             </li>
-
             <li>
-                <a class="sb-nav-link" href="#" data-ptc-tooltip="Vehicle">
+                <a class="sb-nav-link" href="#" data-ptc-tooltip="Vehicle Check">
                     <span class="sb-nav-icon"><i class="bi bi-clipboard2-check"></i></span>
                     <span class="sb-nav-label">Vehicle</span>
                     <span class="sb-badge badge-orange">3</span>
                 </a>
             </li>
+
+           @*  DELIVERY 
+            <li class="sb-section-title">Master</li>
+            <li>
+                <button class="sb-nav-link" data-bs-toggle="collapse"
+                        data-bs-target="#menuDelivery" aria-expanded="false"
+                        data-ptc-tooltip="Delivery Orders">
+                    <span class="sb-nav-icon"><i class="bi bi-truck"></i></span>
+                    <span class="sb-nav-label">Master</span>
+                    <span class="sb-badge badge-blue">12</span>
+                    <i class="bi bi-chevron-right sb-chevron"></i>
+                </button>
+                <ul class="collapse sb-submenu" id="menuDelivery">
+                    <li>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-file-earmark-plus"></i></span>
+                            <span class="sb-nav-label">Drivers List</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-card-list"></i></span>
+                            <span class="sb-nav-label">Driver Pass</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-geo-alt"></i></span>
+                            <span class="sb-nav-label">Track Shipment</span>
+                        </a>
+                    </li>
+                </ul>
+            </li> *@
 
             <li>
                 <button class="sb-nav-link" data-bs-toggle="collapse"
@@ -354,14 +434,15 @@
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
                 <ul class="collapse sb-submenu" id="menuDriver">
+                   
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Driver List">
+                        <a class="sb-nav-link" href="#">
                             <span class="sb-nav-icon"><i class="bi bi-people"></i></span>
                             <span class="sb-nav-label">Driver List</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Driver Attendance">
+                        <a class="sb-nav-link" href="#">
                             <span class="sb-nav-icon"><i class="bi bi-card-checklist"></i></span>
                             <span class="sb-nav-label">Driver Attendance</span>
                         </a>
@@ -369,6 +450,37 @@
                 </ul>
             </li>
 
+            @* <li>
+                <button class="sb-nav-link" data-bs-toggle="collapse"
+                        data-bs-target="#menuFleet" aria-expanded="false"
+                        data-ptc-tooltip="Vehicle Fleet">
+                    <span class="sb-nav-icon"><i class="bi bi-car-front"></i></span>
+                    <span class="sb-nav-label">Vehicle Fleet</span>
+                    <i class="bi bi-chevron-right sb-chevron"></i>
+                </button>
+                <ul class="collapse sb-submenu" id="menuFleet">
+                    <li>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-plus-square"></i></span>
+                            <span class="sb-nav-label">Add Vehicle</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-truck-front"></i></span>
+                            <span class="sb-nav-label">Fleet List</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-wrench-adjustable"></i></span>
+                            <span class="sb-nav-label">Maintenance</span>
+                        </a>
+                    </li>
+                </ul>
+            </li> *@
+
+            @* REPORTS *@
             <li class="sb-section-title">Reports</li>
             <li>
                 <button class="sb-nav-link" data-bs-toggle="collapse"
@@ -380,25 +492,25 @@
                 </button>
                 <ul class="collapse sb-submenu" id="menuReports">
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Daily Summary">
+                        <a class="sb-nav-link" href="#">
                             <span class="sb-nav-icon"><i class="bi bi-calendar-day"></i></span>
                             <span class="sb-nav-label">Daily Summary</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Monthly Report">
+                        <a class="sb-nav-link" href="#">
                             <span class="sb-nav-icon"><i class="bi bi-calendar-month"></i></span>
                             <span class="sb-nav-label">Monthly Report</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Gate Activity">
-                            <span class="sb-nav-icon"><i class="bi bi-activity"></i></span>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-gate"></i></span>
                             <span class="sb-nav-label">Gate Activity</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Export Reports">
+                        <a class="sb-nav-link" href="#">
                             <span class="sb-nav-icon"><i class="bi bi-download"></i></span>
                             <span class="sb-nav-label">Export Reports</span>
                         </a>
@@ -406,6 +518,37 @@
                 </ul>
             </li>
 
+            @* SYSTEM *@
+            @* <li class="sb-section-title">System</li>
+            <li>
+                <button class="sb-nav-link" data-bs-toggle="collapse"
+                        data-bs-target="#menuUsers" aria-expanded="false"
+                        data-ptc-tooltip="User Management">
+                    <span class="sb-nav-icon"><i class="bi bi-people"></i></span>
+                    <span class="sb-nav-label">User Management</span>
+                    <i class="bi bi-chevron-right sb-chevron"></i>
+                </button>
+                <ul class="collapse sb-submenu" id="menuUsers">
+                    <li>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-person-plus-fill"></i></span>
+                            <span class="sb-nav-label">Add User</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-person-lines-fill"></i></span>
+                            <span class="sb-nav-label">User List</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="sb-nav-link" href="#">
+                            <span class="sb-nav-icon"><i class="bi bi-shield-check"></i></span>
+                            <span class="sb-nav-label">Roles &amp; Permissions</span>
+                        </a>
+                    </li>
+                </ul>
+            </li> *@
             <li>
                 <a class="sb-nav-link" href="#" data-ptc-tooltip="Settings">
                     <span class="sb-nav-icon"><i class="bi bi-gear"></i></span>
@@ -422,6 +565,7 @@
         </ul>
     </div>
 
+    @* ── Sign Out ── *@
     <div class="sb-footer-nav">
         <button class="sb-nav-link" data-ptc-tooltip="Sign Out" id="btnSidebarSignOut">
             <span class="sb-nav-icon"><i class="bi bi-box-arrow-left"></i></span>
@@ -431,87 +575,13 @@
 
 </nav>
 
+@* Bind sign-out AFTER all scripts loaded so KSwal is guaranteed defined *@
 <script>
-(function () {
-    document.addEventListener('DOMContentLoaded', function () {
-
-        var body     = document.body;
-        var submenus = document.querySelectorAll('.sb-submenu');
-
-       
-        var openSubmenuIds = [];   /* stores IDs of open submenus */
-
-        function hideAllSubmenus() {
-           
-            openSubmenuIds = [];
-            submenus.forEach(function (sm) {
-                if (sm.classList.contains('show')) {
-                    openSubmenuIds.push(sm.id);   /* remember this was open */
-                }
-              
-                sm.classList.remove('show');
-                sm.style.display  = 'none';
-                sm.style.height   = '';
-                sm.style.overflow = 'hidden';
-
-           
-                var btn = document.querySelector('[data-bs-target="#' + sm.id + '"]');
-                if (btn) { btn.setAttribute('aria-expanded', 'false'); }
-            });
-        }
-
-        function restoreSubmenus() {
-            submenus.forEach(function (sm) {
-             
-                sm.style.display  = '';
-                sm.style.height   = '';
-                sm.style.overflow = '';
-
-                 if (openSubmenuIds.indexOf(sm.id) !== -1) {
-                    sm.classList.add('show');
-                    /* Restore toggle button state */
-                    var btn = document.querySelector('[data-bs-target="#' + sm.id + '"]');
-                    if (btn) { btn.setAttribute('aria-expanded', 'true'); }
-                }
-            });
-        }
-
-        var wasCollapsed = body.classList.contains('sidebar-collapsed');
-
-        var observer = new MutationObserver(function () {
-            var isCollapsed = body.classList.contains('sidebar-collapsed');
-
-            if (isCollapsed && !wasCollapsed) {
-                 hideAllSubmenus();
-            }
-
-            if (!isCollapsed && wasCollapsed) {
-             
-                restoreSubmenus();
-            }
-
-            wasCollapsed = isCollapsed;
-        });
-
-        observer.observe(body, { attributes: true, attributeFilter: ['class'] });
-
-       
-        if (body.classList.contains('sidebar-collapsed')) {
-            hideAllSubmenus();
-        }
-
-      
-        var signOutBtn = document.getElementById('btnSidebarSignOut');
-        if (signOutBtn) {
-            signOutBtn.addEventListener('click', function () {
-                KSwal.confirm(
-                    'Sign Out?',
-                    'You will be signed out of the PTC IGH System.',
-                    function () { document.getElementById('logoutForm').submit(); }
-                );
-            });
-        }
-
+    document.getElementById('btnSidebarSignOut').addEventListener('click', function () {
+        KSwal.confirm(
+            'Sign Out?',
+            'You will be signed out of the PTC IGH System.',
+            function () { document.getElementById('logoutForm').submit(); }
+        );
     });
-}());
 </script>

@@ -325,15 +325,11 @@
                         </a>
                     </li>
                     <li>
-                        <a class="sb-nav-link"
-                           asp-controller="IGH"
-                           asp-action="LeaveTransaction"
-                           data-ptc-tooltip="Leave Transaction">
+                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Leave Transaction">
                             <span class="sb-nav-icon"><i class="bi bi-calendar-x"></i></span>
                             <span class="sb-nav-label">Leave Transaction</span>
                         </a>
                     </li>
-
                 </ul>
             </li>
 
@@ -438,23 +434,34 @@
         var body     = document.body;
         var submenus = document.querySelectorAll('.sb-submenu');
 
-       
+        /* ══════════════════════════════════════════════════════
+           KEY FIX:
+           Save which submenus were OPEN before collapsing
+           so we can restore them exactly when expanding.
+           
+           Before: hideAll() removed 'show' class
+                   showAll() did nothing → Bootstrap had
+                   no 'show' class → click on parent did nothing
+           
+           After:  Save open submenu IDs before hiding
+                   Restore 'show' class on those IDs when expanding
+        ══════════════════════════════════════════════════════ */
         var openSubmenuIds = [];   /* stores IDs of open submenus */
 
         function hideAllSubmenus() {
-           
+            /* Save which ones are currently open */
             openSubmenuIds = [];
             submenus.forEach(function (sm) {
                 if (sm.classList.contains('show')) {
                     openSubmenuIds.push(sm.id);   /* remember this was open */
                 }
-              
+                /* Force hide — works in Firefox + Chrome */
                 sm.classList.remove('show');
                 sm.style.display  = 'none';
                 sm.style.height   = '';
                 sm.style.overflow = 'hidden';
 
-           
+                /* Reset toggle button */
                 var btn = document.querySelector('[data-bs-target="#' + sm.id + '"]');
                 if (btn) { btn.setAttribute('aria-expanded', 'false'); }
             });
@@ -462,12 +469,13 @@
 
         function restoreSubmenus() {
             submenus.forEach(function (sm) {
-             
+                /* Clear inline styles we set */
                 sm.style.display  = '';
                 sm.style.height   = '';
                 sm.style.overflow = '';
 
-                 if (openSubmenuIds.indexOf(sm.id) !== -1) {
+                /* Restore 'show' class if it was open before collapse */
+                if (openSubmenuIds.indexOf(sm.id) !== -1) {
                     sm.classList.add('show');
                     /* Restore toggle button state */
                     var btn = document.querySelector('[data-bs-target="#' + sm.id + '"]');
@@ -476,17 +484,19 @@
             });
         }
 
+        /* Watch body class changes via MutationObserver */
         var wasCollapsed = body.classList.contains('sidebar-collapsed');
 
         var observer = new MutationObserver(function () {
             var isCollapsed = body.classList.contains('sidebar-collapsed');
 
             if (isCollapsed && !wasCollapsed) {
-                 hideAllSubmenus();
+                /* Just collapsed → hide submenus + save state */
+                hideAllSubmenus();
             }
 
             if (!isCollapsed && wasCollapsed) {
-             
+                /* Just expanded → restore saved state */
                 restoreSubmenus();
             }
 
@@ -495,12 +505,12 @@
 
         observer.observe(body, { attributes: true, attributeFilter: ['class'] });
 
-       
+        /* Run on page load if already collapsed */
         if (body.classList.contains('sidebar-collapsed')) {
             hideAllSubmenus();
         }
 
-      
+        /* Sign Out button */
         var signOutBtn = document.getElementById('btnSidebarSignOut');
         if (signOutBtn) {
             signOutBtn.addEventListener('click', function () {

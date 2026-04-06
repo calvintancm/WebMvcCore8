@@ -15,8 +15,8 @@ namespace ptc_IGH_Sys.Models.Shared
         [StringLength(50)]
         public virtual string Value { get; set; }
         
-        [Required]
-        public virtual Attribute Attribute { get; set; }
+        //[Required]
+        //public virtual Attribute Attribute { get; set; }
 
     }
 }

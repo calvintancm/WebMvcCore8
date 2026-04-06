@@ -54,21 +54,24 @@ namespace ptc_IGH_Sys.Controllers
         {
             try
             {
-                var query = _db.IGH_Leave_Transactions.AsNoTracking().AsQueryable();
-
               
+                var query = _db.IGH_Leave_Transactions.AsNoTracking().AsQueryable();
+               
+
                 if (leaveYear.HasValue)
                 {
                     query = query.Where(x => x.Leave_Date.Year == leaveYear.Value);
                 }
 
-             
+
                 if (leaveMonth.HasValue && leaveMonth.Value > 0)
                 {
                     query = query.Where(x => x.Leave_Date.Month == leaveMonth.Value);
                 }
 
-            
+                Console.WriteLine($"Total records: {query.Count()}");
+
+
                 if (!string.IsNullOrWhiteSpace(driverName))
                 {
                     var search = driverName.Trim().ToUpper();
@@ -77,24 +80,26 @@ namespace ptc_IGH_Sys.Controllers
                         x.Driver_Name.ToUpper().Contains(search));
                 }
 
-           
+
                 var projected = query
                     .OrderBy(x => x.Driver_Name)
                     .Select(x => new LeaveTransactionViewModel
                     {
-                        Id         = x.Id,
-                        DriverId   = x.Driver_Id,
-                        DriverName = x.Driver_Name,
-                        LeaveDate  = x.Leave_Date,
+                        Id = x.Id,
+                        DriverId = x.Driver_Id,
+                        DriverName = x.Driver_Name ?? string.Empty,
+                        LeaveDate = x.Leave_Date,
                         LeaveCount = x.Leave_Count,
-                        LeaveType  = x.Leave_Type,
+                        LeaveType = x.Leave_Type ?? "Unknown",
                         LeaveMonth = x.Leave_Month,
-                        Remarks    = x.Remarks,
-                        CreatedAt  = x.Created_At
+                        Remarks = x.Remarks ?? string.Empty,
+                        CreatedAt = x.Created_At,
+
+                       
                     });
 
-                // NOTE: ToDataSourceResultAsync handles server-side paging/sorting
                 var result = await projected.ToDataSourceResultAsync(request);
+                Console.WriteLine($"leaveYear={leaveYear}, leaveMonth={leaveMonth}, driverName='{driverName}'");
 
                 return Json(result);
             }
@@ -134,7 +139,7 @@ namespace ptc_IGH_Sys.Controllers
                     }
 
                     // Only update the editable fields
-                    record.Leave_Count = viewModel.LeaveCount;
+                    record.Leave_Count = viewModel.LeaveCount ?? 0;
                     record.Leave_Type  = viewModel.LeaveType;
                     record.Remarks     = viewModel.Remarks;
                    // record.Updated_At  = DateTime.Now;
@@ -179,11 +184,12 @@ namespace ptc_IGH_Sys.Controllers
                     {
                         Driver_Id   = viewModel.DriverId,
                         Driver_Name = viewModel.DriverName,
-                        Leave_Date  = viewModel.LeaveDate,
-                        Leave_Count = viewModel.LeaveCount,
-                        Leave_Type  = viewModel.LeaveType,
-                        Leave_Month = viewModel.LeaveDate.Month,
-                        Remarks     = viewModel.Remarks,
+                        Leave_Date = viewModel.LeaveDate ?? DateTime.MinValue,   // fallback if null
+                        Leave_Count = viewModel.LeaveCount ?? 0,                 // fallback if null
+                        Leave_Type = viewModel.LeaveType?.ToUpper() ?? string.Empty,
+                        Leave_Month = viewModel.LeaveDate?.Month ?? 0,
+
+                        Remarks = viewModel.Remarks,
                         Created_At  = DateTime.Now,
                         //Updated_By  = User.Identity?.Name ?? "SYSTEM"
                     };

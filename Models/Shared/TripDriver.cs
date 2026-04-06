@@ -32,7 +32,7 @@ namespace ptc_IGH_Sys.Models.Shared
 
         public virtual bool Active { get; set; }
 
-        public virtual List<TripDriverAttribute> Attributes { get; set; }
+        //public virtual List<TripDriverAttribute> Attributes { get; set; }
 
         public virtual double Allowance { get; set; }
 

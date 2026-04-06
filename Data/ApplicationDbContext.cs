@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ptc_IGH_Sys.Models;
 using ptc_IGH_Sys.Models.IGH;
+using ptc_IGH_Sys.Models.Shared;
+using System.Reflection.Emit;
 
 namespace ptc_IGH_Sys.Data
 {
@@ -35,6 +37,7 @@ namespace ptc_IGH_Sys.Data
             // Map to your existing table name
             builder.Entity<ApplicationUser>().ToTable("AspNetUsers");
 
+          
             // IMPORTANT: EF Core 8 uses "LockoutEnd" by default
             // but your existing LCL_UAT DB column is "LockoutEndDateUtc"
             // This line maps them correctly to avoid a column mismatch error

@@ -19,7 +19,7 @@
     </div>
 </div>
 
-@* ── Filter Card ── *@
+
 <div class="ptc-card mb-3">
     <div class="ptc-card-body" style="padding:16px 20px;">
         <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;">
@@ -47,9 +47,6 @@
                        style="width:100%;max-width:280px;"
                        placeholder="Search driver name..." />
             </div>
-
-          
-
 
             <div style="display:flex;gap:8px;padding-bottom:1px;">
                 <button class="btn-ptc-primary" onclick="refreshLeaveGrid()" id="btnSearch">
@@ -85,9 +82,6 @@ $(function () {
 
     kendo.culture('en-GB');
 
-    // ══════════════════════════════════════════
-    //  MONTH DROPDOWN
-    // ══════════════════════════════════════════
     var months = [
         { text: 'Jan', value: 1  }, { text: 'Feb', value: 2  },
         { text: 'Mar', value: 3  }, { text: 'Apr', value: 4  },
@@ -105,9 +99,6 @@ $(function () {
         value:          new Date().getMonth() + 1   // default = current month
     });
 
-    // ══════════════════════════════════════════
-    //  YEAR DROPDOWN
-    // ══════════════════════════════════════════
     var currentYear = new Date().getFullYear();
     var years = [];
     for (var y = currentYear - 2; y <= currentYear + 1; y++) {
@@ -121,16 +112,10 @@ $(function () {
         value:          currentYear
     });
 
-    // ══════════════════════════════════════════
-    //  ENTER KEY on driver name input
-    // ══════════════════════════════════════════
     $('#queryDriverName').on('keypress', function (e) {
         if (e.which === 13) refreshLeaveGrid();
     });
 
-    // ══════════════════════════════════════════
-    //  KENDO GRID
-    // ══════════════════════════════════════════
     $('#leave_grid').kendoGrid({
         dataSource: {
             type:     'json',
@@ -294,15 +279,11 @@ $(function () {
         }
     });
 
-    // ══════════════════════════════════════════
-    //  INITIAL LOAD
-    // ══════════════════════════════════════════
+ 
     refreshLeaveGrid();
 });
 
-// ══════════════════════════════════════════
-//  HELPER: Build filter payload
-// ══════════════════════════════════════════
+
 function getLeaveFilters() {
     return {
         leaveMonth:  $('#queryLeaveMonth').data('kendoDropDownList')
@@ -315,9 +296,6 @@ function getLeaveFilters() {
     };
 }
 
-// ══════════════════════════════════════════
-//  REFRESH GRID
-// ══════════════════════════════════════════
 function refreshLeaveGrid() {
     var grid = $('#leave_grid').data('kendoGrid');
     if (grid) {
@@ -326,9 +304,6 @@ function refreshLeaveGrid() {
     }
 }
 
-// ══════════════════════════════════════════
-//  CLEAR FILTERS
-// ══════════════════════════════════════════
 function clearLeaveFilters() {
     var monthDdl = $('#queryLeaveMonth').data('kendoDropDownList');
     var yearDdl  = $('#queryLeaveYear').data('kendoDropDownList');
@@ -338,9 +313,6 @@ function clearLeaveFilters() {
     refreshLeaveGrid();
 }
 
-// ══════════════════════════════════════════
-//  EXPORT
-// ══════════════════════════════════════════
 function exportLeaveGrid() {
     var grid = $('#leave_grid').data('kendoGrid');
     if (grid) {
@@ -349,16 +321,11 @@ function exportLeaveGrid() {
     }
 }
 
-// ══════════════════════════════════════════
-//  ADD LEAVE MODAL (placeholder)
-// ══════════════════════════════════════════
+
 function openAddLeaveModal() {
     KSwal.info('Add Leave', 'Add Leave form coming soon.');
 }
 
-// ══════════════════════════════════════════
-//  ERROR HANDLER
-// ══════════════════════════════════════════
 function handleGridError(e) {
     var msg = 'An error occurred.';
     if (e.errors) {
