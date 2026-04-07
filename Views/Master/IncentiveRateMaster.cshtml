@@ -1,0 +1,335 @@
+﻿@{
+    ViewData["Title"] = "Incentive Rates";
+    ViewData["BreadcrumbSection"] = "Master Data";
+    ViewData["BreadcrumbPage"] = "Incentive Rates";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Incentive Rate Master</h1>
+        <p class="page-subtitle">Manage incentive rates per job title, trip type, terminal area, etc.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-ptc-primary" onclick="openAddIncentiveModal()">
+            <i class="bi bi-plus-lg"></i> Add Incentive Rate
+        </button>
+        <button class="btn-ptc-outline" onclick="exportIncentiveGrid()">
+            <i class="bi bi-download"></i> Export
+        </button>
+    </div>
+</div>
+
+@* ── Filter Card (minimal) ── *@
+<div class="ptc-card mb-3">
+    <div class="ptc-card-body" style="padding:16px 20px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:5px;min-width:180px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Job Title Group</label>
+                <input type="text" id="queryJobGroup"
+                       class="k-textbox"
+                       style="width:100%;max-width:200px;"
+                       placeholder="Search job group..." />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;min-width:180px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Rate Type</label>
+                <select id="queryRateTypeId" style="width:180px;"></select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;min-width:150px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Trip Type</label>
+                <input type="text" id="queryTripType"
+                       class="k-textbox"
+                       style="width:150px;"
+                       placeholder="e.g., Transfer, Charter" />
+            </div>
+            <div style="display:flex;gap:8px;padding-bottom:1px;">
+                <button class="btn-ptc-primary" onclick="refreshIncentiveGrid()">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <button class="btn-ptc-outline" onclick="clearIncentiveFilters()">
+                    <i class="bi bi-x-circle"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── Grid Card ── *@
+<div class="ptc-card">
+    <div class="ptc-card-header">
+        <h2 class="ptc-card-title">
+            <i class="bi bi-gift"></i> Incentive Rates
+        </h2>
+        <span id="incentiveRecordCount"
+              style="font-size:0.75rem;color:var(--text-muted);background:#f1f5f9;
+                     padding:3px 10px;border-radius:20px;">0 records</span>
+    </div>
+    <div class="ptc-card-body" style="padding:0;">
+        <div id="incentive_grid"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Store RateType data source globally for reuse
+        var incentiveRateTypeDataSource = null;
+
+        $(function () {
+            kendo.culture('en-GB');
+
+            // Load Rate Types for filter dropdown and grid editor
+            incentiveRateTypeDataSource = new kendo.data.DataSource({
+                transport: {
+                    read: {
+                        url: '@Url.Action("GetRateTypesForDropdown", "Master")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: function() { return JSON.stringify({}); }
+                    }
+                },
+                schema: { data: 'Data' }
+            });
+
+            // Filter DropDownList for Rate Type
+            $('#queryRateTypeId').kendoDropDownList({
+                dataTextField: 'Rate_Description',
+                dataValueField: 'RateType_ID',
+                dataSource: incentiveRateTypeDataSource,
+                optionLabel: 'All Rate Types',
+                value: null
+            });
+
+            // Enter key search
+            $('#queryJobGroup, #queryTripType').on('keypress', function (e) {
+                if (e.which === 13) refreshIncentiveGrid();
+            });
+
+            /* ══════════════════════════════════════════════════════════
+               KENDO GRID – with DropDownList for RateTypeId and other editors
+            ══════════════════════════════════════════════════════════ */
+            $('#incentive_grid').kendoGrid({
+                dataSource: {
+                    transport: {
+                        read: {
+                            url:  '@Url.Action("IncentiveRateMasterRead", "Master")',
+                            type: 'POST'
+                        },
+                        update: {
+                            url:  '@Url.Action("IncentiveRateMasterUpdate", "Master")',
+                            type: 'POST'
+                        },
+                        create: {
+                            url:  '@Url.Action("IncentiveRateMasterCreate", "Master")',
+                            type: 'POST'
+                        },
+                        destroy: {
+                            url:  '@Url.Action("IncentiveRateMasterDestroy", "Master")',
+                            type: 'POST'
+                        },
+                        parameterMap: function (data, operation) {
+                            if (operation === 'read') {
+                                return $.extend({}, data, getIncentiveFilters());
+                            }
+                            return data;
+                        }
+                    },
+                    schema: {
+                        data:   'Data',
+                        total:  'Total',
+                        errors: 'Errors',
+                        model: {
+                            id: 'IncentiveRateId',
+                            fields: {
+                                IncentiveRateId:    { type: 'number', editable: false },
+                                RateTypeId:         { type: 'number', validation: { required: true } },
+                                RateTypeDescription:{ type: 'string', editable: false },
+                                JobTitleGroup:      { type: 'string', validation: { required: true } },
+                                RateValue:          { type: 'number', validation: { required: true, min: 0 } },
+                                Currency:           { type: 'string', validation: { required: true, maxlength: 3 } },
+                                TripType:           { type: 'string' },
+                                TerminalArea:       { type: 'string' },
+                                TripThresholdMin:   { type: 'number', validation: { min: 0 } },
+                                AssignmentType:     { type: 'string' },
+                                EffectiveDate:      { type: 'date', validation: { required: true } }
+                            }
+                        }
+                    },
+                    pageSize:       50,
+                    serverPaging:   true,
+                    serverSorting:  true,
+                    sort:           { field: 'JobTitleGroup', dir: 'asc' },
+                    requestEnd: function (e) {
+                        if (e.type === 'read' && e.response) {
+                            var total = e.response.Total || 0;
+                            $('#incentiveRecordCount').text(total + ' record' + (total !== 1 ? 's' : ''));
+                        }
+                    },
+                    error: function (e) { handleIncentiveGridError(e); }
+                },
+
+                columns: [
+                    { field: 'IncentiveRateId', hidden: true },
+                    {
+                        field: 'JobTitleGroup', title: 'Job Title Group', width: 180
+                    },
+                    {
+                        field: 'RateTypeId', title: 'Rate Type', width: 180,
+                        template: '#: RateTypeDescription #',
+                        editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: 'Rate_Description',
+                                    dataValueField: 'RateType_ID',
+                                    dataSource: incentiveRateTypeDataSource,
+                                    value: options.model.RateTypeId,
+                                    optionLabel: 'Select Rate Type'
+                                });
+                        }
+                    },
+                    {
+                        field: 'RateValue', title: 'Rate Value', width: 120,
+                        format: '{0:N2}',
+                        attributes: { style: 'text-align:right;' }
+                    },
+                    {
+                        field: 'Currency', title: 'Currency', width: 100,
+                        editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: 'text',
+                                    dataValueField: 'value',
+                                    dataSource: [
+                                        { text: 'SGD', value: 'SGD' },
+                                        { text: 'USD', value: 'USD' },
+                                        { text: 'MYR', value: 'MYR' }
+                                    ],
+                                    value: options.model.Currency || 'SGD'
+                                });
+                        }
+                    },
+                    {
+                        field: 'TripType', title: 'Trip Type', width: 120
+                    },
+                    {
+                        field: 'TerminalArea', title: 'Terminal Area', width: 130
+                    },
+                    {
+                        field: 'TripThresholdMin', title: 'Trip Threshold (Min)', width: 140,
+                        format: '{0:N0}',
+                        attributes: { style: 'text-align:right;' }
+                    },
+                    {
+                        field: 'AssignmentType', title: 'Assignment Type', width: 130
+                    },
+                    {
+                        field: 'EffectiveDate', title: 'Effective Date', width: 130,
+                        format: '{0:dd-MMM-yyyy}',
+                        editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDatePicker({ format: 'dd-MMM-yyyy' });
+                        }
+                    },
+                    {
+                        command: [{
+                            name: 'edit',
+                            text: { edit: ' Edit', update: ' Save', cancel: ' Cancel' }
+                        }],
+                        title: 'Action', width: 160
+                    }
+                ],
+
+                editable:   'inline',
+                pageable:   { pageSize: 10, pageSizes: [10, 20, 50, 100], buttonCount: 5 },
+                sortable:   true,
+                scrollable: true,
+                height:     560,
+
+                dataBound: function () {
+                    this.thead.find('th').css({
+                        'background':   '#f8fafc',
+                        'font-weight':  '600',
+                        'font-size':    '0.77rem',
+                        'color':        '#475569',
+                        'border-color': '#e2e8f0'
+                    });
+                },
+
+                save: function () {
+                    KSwal.toast('success', 'Incentive rate updated.');
+                }
+            });
+
+            // Refresh grid when filter dropdown changes
+            $('#queryRateTypeId').data('kendoDropDownList').bind('change', function () {
+                refreshIncentiveGrid();
+            });
+
+            refreshIncentiveGrid();
+        });
+
+        function getIncentiveFilters() {
+            var jobGroup = $('#queryJobGroup').val().trim();
+            var rateDdl = $('#queryRateTypeId').data('kendoDropDownList');
+            var rateId = rateDdl ? rateDdl.value() : '';
+            var tripType = $('#queryTripType').val().trim();
+            return {
+                jobTitleGroup: jobGroup,
+                rateTypeId: rateId && rateId !== '' ? parseInt(rateId) : null,
+                tripType: tripType
+            };
+        }
+
+        function refreshIncentiveGrid() {
+            var grid = $('#incentive_grid').data('kendoGrid');
+            if (!grid) return;
+            grid.dataSource.query({
+                page: 1,
+                pageSize: grid.dataSource.pageSize(),
+                sort: grid.dataSource.sort()
+            });
+        }
+
+        function clearIncentiveFilters() {
+            $('#queryJobGroup').val('');
+            $('#queryTripType').val('');
+            var rateDdl = $('#queryRateTypeId').data('kendoDropDownList');
+            if (rateDdl) rateDdl.value('');
+            refreshIncentiveGrid();
+        }
+
+        function exportIncentiveGrid() {
+            var grid = $('#incentive_grid').data('kendoGrid');
+            if (grid) { grid.saveAsExcel(); KSwal.toast('info', 'Exporting...'); }
+        }
+
+        function openAddIncentiveModal() {
+            var grid = $('#incentive_grid').data('kendoGrid');
+            if (grid) {
+                grid.addRow();
+            }
+        }
+
+        function handleIncentiveGridError(e) {
+            var msg = 'An error occurred loading incentive rates.';
+            if (e.errors) {
+                var parts = [];
+                $.each(e.errors, function (k, v) {
+                    if (v.errors) parts.push(v.errors.join('\n'));
+                    else if (typeof v === 'string') parts.push(v);
+                });
+                if (parts.length) msg = parts.join('\n');
+            } else if (e.xhr) {
+                console.error('Incentive grid error:', e.xhr.status, e.xhr.responseText);
+                if (e.xhr.status === 401) msg = 'Session expired. Please log in again.';
+                if (e.xhr.status === 403) msg = 'You do not have permission.';
+                if (e.xhr.status === 500) msg = 'Server error. Check logs.';
+            }
+            KSwal.error('Grid Error', msg);
+        }
+    </script>
+}

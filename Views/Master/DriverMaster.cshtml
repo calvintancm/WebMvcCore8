@@ -10,9 +10,9 @@
         <p class="page-subtitle">Manage Trip Drivers</p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn-ptc-primary" onclick="openAddDriverModal()">
+        @*   <button class="btn-ptc-primary" onclick="openAddDriverModal()">
             <i class="bi bi-plus-lg"></i> Add Driver
-        </button>
+        </button> *@
         <button class="btn-ptc-outline" onclick="exportDriverGrid()">
             <i class="bi bi-download"></i> Export
         </button>
@@ -140,8 +140,8 @@
                                 JobTitle_Group:   { type: 'string' },
                                 // DepartmentName:   { type: 'string', editable: false },
                                 // PaymentSchemeName:{ type: 'string', editable: false },
-                                CreatedAt:        { type: 'date',   editable: false },
-                                UpdatedAt:        { type: 'date',   editable: false }
+                                CreatedAt:        { type: 'string',   editable: false },
+                                UpdatedAt:        { type: 'string',   editable: false }
                             }
                         }
                     },
@@ -164,29 +164,35 @@
                         field: 'Name', title: 'Driver Name', width: 200,
                         template: '<span style="font-weight:600;">#: Name #</span>'
                     },
-                    { field: 'LicenseNumber', title: 'License No', width: 130 },
-                    { field: 'NRIC', title: 'NRIC', width: 130 },
-                    { field: 'MobileNumber', title: 'Mobile', width: 130 },
+                    { field: 'LicenseNumber', title: 'License No', width: 100 },
+                    { field: 'NRIC', title: 'NRIC', width: 100 },
+                    { field: 'MobileNumber', title: 'Mobile', width: 100 },
                     {
-                        field: 'Active', title: 'Active', width: 90,
+                        field: 'Active', title: 'Active', width: 80,
                         template: '# if(Active) { # <span class="badge-active">Active</span> # } else { # <span class="badge-inactive">Inactive</span> # } #',
                         attributes: { style: 'text-align:center;' }
                     },
                     {
-                        field: 'Allowance', title: 'Allowance', width: 120,
+                        field: 'Allowance', title: 'Allowance', width: 100,
                         format: '{0:N2}',
                         attributes: { style: 'text-align:right;' }
                     },
-                    { field: 'Nationality', title: 'Nationality', width: 120 },
+                    { field: 'Nationality', title: 'Nationality', width: 100 },
                     { field: 'Shift', title: 'Shift', width: 100 },
-                    { field: 'JobTitle_Group', title: 'Job Group', width: 130 },
+                    { field: 'JobTitle_Group', title: 'Job Group', width: 100 },
                     // { field: 'DepartmentName', title: 'Department', width: 150 },
                     // { field: 'PaymentSchemeName', title: 'Payment Scheme', width: 150 },
                     {
-                        field: 'CreatedAt', title: 'Created', width: 140,
-                        template: function(d) {
-                            return d.CreatedAt ? kendo.toString(kendo.parseDate(d.CreatedAt), 'dd-MMM-yyyy') : '';
-                        }
+                           field: 'CreatedAt', 
+                           title: 'Created At', 
+                           width: 140,
+                           template: '#: CreatedAt #'
+                    },
+                     {
+                           field: 'UpdatedAt',
+                           title: 'Updated At',
+                           width: 0,
+                           template: '#: UpdatedAt #'
                     },
                     {
                         command: [{
@@ -198,7 +204,7 @@
                 ],
 
                 editable:   'inline',
-                pageable:   { pageSize: 50, pageSizes: [25, 50, 100, 200], buttonCount: 5 },
+                pageable:   { pageSize: 10, pageSizes: [10, 20, 50, 100], buttonCount: 5 },
                 sortable:   true,
                 scrollable: true,
                 height:     560,

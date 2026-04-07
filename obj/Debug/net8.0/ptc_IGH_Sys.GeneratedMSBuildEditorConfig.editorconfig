@@ -28,16 +28,40 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Home/Grid.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxHcmlkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Home/Index1.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleDEuY3NodG1s
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/IGH/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSUdIXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Home/Privacy.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/IGH/LeaveTransaction.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSUdIXExlYXZlVHJhbnNhY3Rpb24uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/IGH/SalaryAdjustment.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSUdIXFNhbGFyeUFkanVzdG1lbnQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Master/DriverMaster.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFzdGVyXERyaXZlck1hc3Rlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Master/IncentiveRateMaster.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFzdGVyXEluY2VudGl2ZVJhdGVNYXN0ZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Master/JobTitleRateMaster.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFzdGVyXEpvYlRpdGxlUmF0ZU1hc3Rlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Master/RateTypeMaster.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFzdGVyXFJhdGVUeXBlTWFzdGVyLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Shared/Error.cshtml]
@@ -64,12 +88,32 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9Mb2dpblBhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Shared/_Navigation - Copy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZpZ2F0aW9uIC0gQ29weS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Shared/_Navigation.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZpZ2F0aW9uLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Shared/_Navigation1.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZpZ2F0aW9uMS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Shared/_Navigation2.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZpZ2F0aW9uMi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Sync/GenerateMonthlyWages.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3luY1xHZW5lcmF0ZU1vbnRobHlXYWdlcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/PTC/EDPUnity/ptc_IGH_Sys/Views/Sync/ImportTripData.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3luY1xJbXBvcnRUcmlwRGF0YS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/PTC/EDPUnity/ptc_IGH_Sys/Views/_ViewImports.cshtml]

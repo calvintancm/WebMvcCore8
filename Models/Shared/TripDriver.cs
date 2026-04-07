@@ -36,17 +36,20 @@ namespace ptc_IGH_Sys.Models.Shared
 
         public virtual double Allowance { get; set; }
 
-        public int PaymentScheme_Id { get; set; }
-        public int Department_Id { get; set; }
-        /*Custom*/
-        [UIHint("PaymentSchemeEditor")]
-        public virtual PaymentScheme PaymentScheme { get; set; }
+        // Change from int? to long? to match PaymentScheme.Id
+        public long? PaymentScheme_Id { get; set; }
 
-        [UIHint("DepartmentEditor")]
-        public virtual Department Department { get; set; }
-        public virtual string Nationality { get; set; }
-        public virtual string Shift { get; set; }
-        public virtual string JobTitle_Group { get; set; }
+        [ForeignKey("PaymentScheme_Id")]
+        public PaymentScheme PaymentScheme { get; set; }
+
+        // Department_Id stays int? if Department.Id is int
+        public long? Department_Id { get; set; }
+
+        [ForeignKey("Department_Id")]
+        public Department Department { get; set; }
+        public virtual string? Nationality { get; set; }
+        public virtual string? Shift { get; set; }
+        public virtual string? JobTitle_Group { get; set; }
 
     }
 }

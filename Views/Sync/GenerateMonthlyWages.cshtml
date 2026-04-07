@@ -1,0 +1,126 @@
+﻿@{
+    ViewData["Title"] = "Generate Monthly Wages";
+    ViewData["BreadcrumbSection"] = "Sync Data";
+    ViewData["BreadcrumbPage"] = "Generate Monthly Wages";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Generate Monthly Wages</h1>
+        <p class="page-subtitle">Run stored procedure to calculate driver monthly wages</p>
+    </div>
+</div>
+
+@* ── Action Card ── *@
+<div class="ptc-card">
+    <div class="ptc-card-body" style="padding: 24px;">
+        <div style="max-width: 500px;">
+            <div style="margin-bottom: 20px;">
+                <i class="bi bi-calculator-fill" style="font-size: 32px; color: var(--accent);"></i>
+                <h3 style="margin-top: 8px; margin-bottom: 4px;">Monthly Wage Calculation</h3>
+                <p style="color: var(--text-secondary);">This will calculate driver wages, incentives, and deductions for the selected period.</p>
+            </div>
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px;">
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 8px; display: block;">Start Date</label>
+                    <input id="startDate" style="width: 200px;" />
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 8px; display: block;">End Date</label>
+                    <input id="endDate" style="width: 200px;" />
+                </div>
+            </div>
+
+            <div>
+                <button id="runButton" class="btn-ptc-primary" style="min-width: 180px;">
+                    <i class="bi bi-play-fill"></i> Generate Wages
+                </button>
+                <button id="resetButton" class="btn-ptc-outline" style="min-width: 120px; margin-left: 12px;">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── REMARK: For later modifications ──
+   1. To change date format, modify kendoDatePicker 'format' option.
+   2. To add driver filter, add a dropdown and pass DriverID parameter.
+   3. To change stored procedure name, update URL in AJAX and controller action.
+   4. To adjust date range validation, modify the if condition in AJAX.
+*@
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Initialize Kendo DatePickers
+            $("#startDate").kendoDatePicker({
+                format: "dd-MMM-yyyy",
+                value: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 27) // default: previous month 27th
+            });
+
+            $("#endDate").kendoDatePicker({
+                format: "dd-MMM-yyyy",
+                value: new Date() // default: today
+            });
+
+            // Reset button: set to default dates
+            $("#resetButton").click(function () {
+                var defaultStart = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 27);
+                var defaultEnd = new Date();
+                $("#startDate").data("kendoDatePicker").value(defaultStart);
+                $("#endDate").data("kendoDatePicker").value(defaultEnd);
+            });
+
+            // Run button click
+            $("#runButton").click(function () {
+                var startPicker = $("#startDate").data("kendoDatePicker");
+                var endPicker = $("#endDate").data("kendoDatePicker");
+
+                var startDate = startPicker.value();
+                var endDate = endPicker.value();
+
+                if (!startDate || !endDate) {
+                    KSwal.toast('error', 'Please select both Start Date and End Date.');
+                    return;
+                }
+
+                if (startDate > endDate) {
+                    KSwal.toast('error', 'Start Date cannot be after End Date.');
+                    return;
+                }
+
+                KSwal.loading('Calculating monthly wages... Please wait.');
+
+                var $btn = $("#runButton");
+                $btn.prop("disabled", true).html('<i class="bi bi-hourglass-split"></i> Generating...');
+
+                $.ajax({
+                    url: '@Url.Action("RunGenerateMonthlyWages", "Sync")',
+                    type: 'POST',
+                    data: {
+                        startDate: kendo.toString(startDate, "yyyy-MM-dd"),
+                        endDate: kendo.toString(endDate, "yyyy-MM-dd")
+                    },
+                    success: function (response) {
+                        KSwal.close();
+                        if (response.success) {
+                            KSwal.toast('success', response.message);
+                        } else {
+                            KSwal.toast('error', response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        KSwal.close();
+                        var msg = xhr.responseJSON?.message || 'An unexpected error occurred.';
+                        KSwal.toast('error', msg);
+                    },
+                    complete: function () {
+                        $btn.prop("disabled", false).html('<i class="bi bi-play-fill"></i> Generate Wages');
+                    }
+                });
+            });
+        });
+    </script>
+}

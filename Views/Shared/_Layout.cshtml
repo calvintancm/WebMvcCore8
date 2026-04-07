@@ -166,6 +166,13 @@
 
         @@keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
 
+        /* Prevent Bootstrap focus ring on sidebar buttons and links */
+        #sidebar *:focus,
+        #sidebar *:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
         /* Kendo */
         .k-grid th          { background: #f8fafc !important; font-weight: 600 !important; font-size: 0.77rem !important; color: var(--text-secondary) !important; }
         .k-grid td          { font-size: 0.82rem; }

@@ -9,12 +9,19 @@
 using Microsoft.EntityFrameworkCore;
 using ptc_IGH_Sys.Data;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 /* ── DB ─────────────────────────────────────────────────────── */
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+/* ── Second DB: SHReportPortal (for stored procedure) ───────── */
+builder.Services.AddDbContext<SHReportDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("SHReportPortalConnection")));
 
 /* ── Cookie Auth ─────────────────────────────────────────────── */
 builder.Services.AddAuthentication(

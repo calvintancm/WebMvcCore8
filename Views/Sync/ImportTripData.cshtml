@@ -1,0 +1,127 @@
+﻿@{
+    ViewData["Title"] = "Import Trip Data";
+    ViewData["BreadcrumbSection"] = "Sync Data";
+    ViewData["BreadcrumbPage"] = "Import Trip Data";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Import Trip Data</h1>
+        <p class="page-subtitle">Execute stored procedure to refresh trip, leave, and salary data</p>
+    </div>
+</div>
+
+@* ── Action Card ── *@
+<div class="ptc-card">
+    <div class="ptc-card-body" style="padding: 24px;">
+        <div style="max-width: 500px;">
+            <div style="margin-bottom: 20px;">
+                <i class="bi bi-arrow-repeat" style="font-size: 32px; color: var(--accent);"></i>
+                <h3 style="margin-top: 8px; margin-bottom: 4px;">Import Trip Summary</h3>
+                <p style="color: var(--text-secondary);">This will import driver trips, leave, and salary adjustments for the selected period.</p>
+            </div>
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px;">
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 8px; display: block;">From Date</label>
+                    <input id="fromDate" style="width: 200px;" />
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 8px; display: block;">To Date</label>
+                    <input id="toDate" style="width: 200px;" />
+                </div>
+            </div>
+
+            <div>
+                <button id="runButton" class="btn-ptc-primary" style="min-width: 160px;">
+                    <i class="bi bi-play-fill"></i> Import Data
+                </button>
+                <button id="resetButton" class="btn-ptc-outline" style="min-width: 120px; margin-left: 12px;">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── REMARK: For later modifications ──
+   1. To change date format, modify kendoDatePicker 'format' option.
+   2. To add driver filter, add a dropdown/input and pass DriverSearch parameter.
+   3. To change stored procedure name, update URL in AJAX and controller action.
+   4. To adjust date range validation, modify the if condition in AJAX.
+   5. To change button spinner text, update the 'Importing...' string.
+*@
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Initialize Kendo DatePickers
+            $("#fromDate").kendoDatePicker({
+                format: "dd-MMM-yyyy",
+                value: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+            });
+
+            $("#toDate").kendoDatePicker({
+                format: "dd-MMM-yyyy",
+                value: new Date()
+            });
+
+            // Reset button
+            $("#resetButton").click(function () {
+                var firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                var today = new Date();
+                $("#fromDate").data("kendoDatePicker").value(firstDay);
+                $("#toDate").data("kendoDatePicker").value(today);
+            });
+
+            // Run button click
+            $("#runButton").click(function () {
+                var fromDatePicker = $("#fromDate").data("kendoDatePicker");
+                var toDatePicker = $("#toDate").data("kendoDatePicker");
+
+                var fromDate = fromDatePicker.value();
+                var toDate = toDatePicker.value();
+
+                if (!fromDate || !toDate) {
+                    KSwal.toast('error', 'Please select both From Date and To Date.');
+                    return;
+                }
+
+                if (fromDate > toDate) {
+                    KSwal.toast('error', 'From Date cannot be after To Date.');
+                    return;
+                }
+
+                KSwal.loading('Importing trip data... Please wait.');
+
+                var $btn = $("#runButton");
+                $btn.prop("disabled", true).html('<i class="bi bi-hourglass-split"></i> Importing...');
+
+                $.ajax({
+                    url: '@Url.Action("RunImportTripData", "Sync")',
+                    type: 'POST',
+                    data: {
+                        fromDate: kendo.toString(fromDate, "yyyy-MM-dd"),
+                        toDate: kendo.toString(toDate, "yyyy-MM-dd")
+                    },
+                    success: function (response) {
+                        KSwal.close();
+                        if (response.success) {
+                            KSwal.toast('success', response.message);
+                        } else {
+                            KSwal.toast('error', response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        KSwal.close();
+                        var msg = xhr.responseJSON?.message || 'An unexpected error occurred.';
+                        KSwal.toast('error', msg);
+                    },
+                    complete: function () {
+                        $btn.prop("disabled", false).html('<i class="bi bi-play-fill"></i> Import Data');
+                    }
+                });
+            });
+        });
+    </script>
+}

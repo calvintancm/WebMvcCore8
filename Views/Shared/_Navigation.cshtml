@@ -159,9 +159,12 @@
             text-decoration: none;
         }
 
+        /* Active state — no outline/shadow to avoid double-line */
         .sb-nav-link.active {
             background: var(--sb-active-bg);
             color: #fff;
+            outline: none;
+            box-shadow: none;
         }
 
             .sb-nav-link.active::before {
@@ -174,6 +177,30 @@
                 background: var(--sb-active-line);
                 border-radius: 0 3px 3px 0;
             }
+
+    body.sidebar-collapsed .sb-nav-link.active::before {
+        display: none;
+    }
+
+        /* Remove Bootstrap focus ring from ALL nav links */
+        .sb-nav-link:focus,
+        .sb-nav-link:focus-visible {
+            outline: none;
+            box-shadow: none;
+        }
+
+    /* Remove Bootstrap default button styles on collapse toggles */
+    button.sb-nav-link {
+        outline: none;
+        box-shadow: none;
+        -webkit-appearance: none;
+    }
+
+        button.sb-nav-link:focus,
+        button.sb-nav-link:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+        }
 
     /* Icons — NEVER hidden */
     .sb-nav-icon {
@@ -346,9 +373,10 @@
     }
 
     /* Flyout panel — hidden by default */
+    /* REPLACE WITH THIS — adds the arrow pointer */
     .sb-flyout {
         display: none;
-        position: fixed; /* fixed so it clears the sidebar overflow */
+        position: fixed;
         left: var(--sidebar-w-collapsed);
         background: #1e2d42;
         border-radius: 0 10px 10px 0;
@@ -359,7 +387,19 @@
         padding: 6px 0;
         z-index: 9998;
         pointer-events: auto;
+        margin-left: 8px; /* ← gap between sidebar edge and panel */
     }
+
+        /* Arrow pointing LEFT toward the sidebar icon */
+        .sb-flyout::before {
+            content: '';
+            position: absolute;
+            right: 100%; /* ← sits just outside the left edge of the panel */
+            top: 14px; /* ← aligns with first item, adjust if needed */
+            border: 7px solid transparent;
+            border-right-color: #1e2d42; /* ← matches flyout background */
+            pointer-events: none;
+        }
 
     /* Flyout header (parent menu name) */
     .sb-flyout-header {
@@ -559,29 +599,24 @@
                     <span class="sb-nav-label">Sync Data</span>
                     <i class="bi bi-chevron-right sb-chevron"></i>
                 </button>
+
                 <ul class="collapse sb-submenu" id="menuSyncData">
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Import Trip Data">
+                        <a class="sb-nav-link" asp-controller="Sync" asp-action="ImportTripData"
+                           data-ptc-tooltip="Import driver trip data from source">
                             <span class="sb-nav-icon"><i class="bi bi-cloud-download"></i></span>
                             <span class="sb-nav-label">Import Trip Data</span>
                         </a>
                     </li>
-                    <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Sync History">
-                            <span class="sb-nav-icon"><i class="bi bi-clock-history"></i></span>
-                            <span class="sb-nav-label">Sync History</span>
-                        </a>
-                    </li>
+                  
                 </ul>
                 @* Flyout for collapsed state *@
                 <div class="sb-flyout">
                     <div class="sb-flyout-header">Sync Data</div>
-                    <a class="sb-flyout-item" href="#">
+                    <a class="sb-flyout-item" asp-controller="Sync" asp-action="ImportTripData">
                         <i class="bi bi-cloud-download"></i> Import Trip Data
                     </a>
-                    <a class="sb-flyout-item" href="#">
-                        <i class="bi bi-clock-history"></i> Sync History
-                    </a>
+                    
                 </div>
             </li>
 
@@ -610,6 +645,13 @@
                             <span class="sb-nav-label">Leave Transaction</span>
                         </a>
                     </li>
+                    <li>
+                        <a class="sb-nav-link" asp-controller="Sync" asp-action="GenerateMonthlyWages"
+                           data-ptc-tooltip="Calculate monthly driver wages">
+                            <span class="sb-nav-icon"><i class="bi bi-calculator-fill"></i></span>
+                            <span class="sb-nav-label">Generate Monthly Wages</span>
+                        </a>
+                    </li>
                 </ul>
                 @* Flyout *@
                 <div class="sb-flyout">
@@ -622,20 +664,16 @@
                        asp-controller="IGH" asp-action="LeaveTransaction">
                         <i class="bi bi-calendar-x"></i> Leave Transaction
                     </a>
+                    <a class="sb-flyout-item" asp-controller="Sync" asp-action="GenerateMonthlyWages">
+                        <i class="bi bi-calculator-fill"></i> Generate Monthly Wages
+                    </a>
                 </div>
             </li>
 
-            @* Vehicle — no submenu *@
-            <li>
-                <a class="sb-nav-link" href="#" data-ptc-tooltip="Vehicle">
-                    <span class="sb-nav-icon"><i class="bi bi-clipboard2-check"></i></span>
-                    <span class="sb-nav-label">Vehicle</span>
-                    <span class="sb-badge badge-orange">3</span>
-                </a>
-            </li>
-
+          
             @* Driver Management — with flyout *@
-            <li class="has-submenu">
+
+           @*  <li class="has-submenu">
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuDriver" aria-expanded="false"
                         data-ptc-tooltip="Driver Management">
@@ -652,7 +690,6 @@
                     </li>
 
 
-
                     <li>
                         <a class="sb-nav-link" href="#" data-ptc-tooltip="Driver Attendance">
                             <span class="sb-nav-icon"><i class="bi bi-card-checklist"></i></span>
@@ -660,17 +697,19 @@
                         </a>
                     </li>
                 </ul>
-                @* Flyout *@
+               
+
                 <div class="sb-flyout">
                     <div class="sb-flyout-header">Driver Management</div>
-                    <a class="sb-flyout-item" href="#">
+                    <a class="sb-flyout-item"
+                       asp-controller="Master" asp-action="DriverMaster">
                         <i class="bi bi-people"></i> Driver List
                     </a>
                     <a class="sb-flyout-item" href="#">
                         <i class="bi bi-card-checklist"></i> Driver Attendance
                     </a>
                 </div>
-            </li>
+            </li> *@
 
             @* ════ REPORTS ════ *@
             <li class="sb-section-title">Reports</li>
@@ -727,13 +766,67 @@
                 </div>
             </li>
 
-            @* Settings — no submenu *@
-            <li>
-                <a class="sb-nav-link" href="#" data-ptc-tooltip="Settings">
-                    <span class="sb-nav-icon"><i class="bi bi-gear"></i></span>
+          
+
+            @* Master Data — with flyout *@
+            <li class="has-submenu">
+                <button class="sb-nav-link" data-bs-toggle="collapse"
+                        data-bs-target="#menuMasterData" aria-expanded="false"
+                        data-ptc-tooltip="Settings">
+                    <span class="sb-nav-icon"><i class="bi bi-database"></i></span>
                     <span class="sb-nav-label">Settings</span>
-                </a>
+                    <i class="bi bi-chevron-right sb-chevron"></i>
+                </button>
+                <ul class="collapse sb-submenu" id="menuMasterData">
+                    <li>
+                        <a class="sb-nav-link" asp-controller="Master" asp-action="DriverMaster"
+                           data-ptc-tooltip="Manage Drivers">
+                            <span class="sb-nav-icon"><i class="bi bi-people"></i></span>
+                            <span class="sb-nav-label">Drivers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="sb-nav-link" asp-controller="Master" asp-action="RateTypeMaster"
+                           data-ptc-tooltip="Rate Types (ID 1-9)">
+                            <span class="sb-nav-icon"><i class="bi bi-tags"></i></span>
+                            <span class="sb-nav-label">Rate Types</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="sb-nav-link" asp-controller="Master" asp-action="JobTitleRateMaster"
+                           data-ptc-tooltip="Rates per Job Title">
+                            <span class="sb-nav-icon"><i class="bi bi-calculator"></i></span>
+                            <span class="sb-nav-label">Job Title Rates</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="sb-nav-link" asp-controller="Master" asp-action="IncentiveRateMaster"
+                           data-ptc-tooltip="Incentive Rates">
+                            <span class="sb-nav-icon"><i class="bi bi-gift"></i></span>
+                            <span class="sb-nav-label">Incentive Rates</span>
+                        </a>
+                    </li>
+                </ul>
+                @* Flyout *@
+                <div class="sb-flyout">
+                    <div class="sb-flyout-header">Master Data</div>
+                    <a class="sb-flyout-item" asp-controller="Master" asp-action="DriverMaster">
+                        <i class="bi bi-people"></i> Drivers
+                    </a>
+                    <a class="sb-flyout-item" asp-controller="Master" asp-action="RateTypeMaster">
+                        <i class="bi bi-tags"></i> Rate Types
+                    </a>
+                    <a class="sb-flyout-item" asp-controller="Master" asp-action="JobTitleRateMaster">
+                        <i class="bi bi-calculator"></i> Job Title Rates
+                    </a>
+                    <a class="sb-flyout-item" asp-controller="Master" asp-action="IncentiveRateMaster">
+                        <i class="bi bi-gift"></i> Incentive Rates
+                    </a>
+                </div>
             </li>
+
+
+
 
             @* Audit Log — no submenu *@
             <li>

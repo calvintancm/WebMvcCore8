@@ -11471,11 +11471,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\PTC\\EDPUnity\\ptc_IGH_system\\ptc_IGH_System.csproj",
-      "projectName": "ptc_IGH_System",
-      "projectPath": "C:\\PTC\\EDPUnity\\ptc_IGH_system\\ptc_IGH_System.csproj",
+      "projectUniqueName": "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\ptc_IGH_Sys.csproj",
+      "projectName": "ptc_IGH_Sys",
+      "projectPath": "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\ptc_IGH_Sys.csproj",
       "packagesPath": "C:\\Users\\calvin.tan\\.nuget\\packages\\",
-      "outputPath": "C:\\PTC\\EDPUnity\\ptc_IGH_system\\obj\\",
+      "outputPath": "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

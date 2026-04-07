@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\PTC\\EDPUnity\\ptc_web_net8\\ptc_IGH_Sys.csproj": {}
+    "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\ptc_IGH_Sys.csproj": {}
   },
   "projects": {
-    "C:\\PTC\\EDPUnity\\ptc_web_net8\\ptc_IGH_Sys.csproj": {
+    "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\ptc_IGH_Sys.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\PTC\\EDPUnity\\ptc_web_net8\\ptc_IGH_Sys.csproj",
+        "projectUniqueName": "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\ptc_IGH_Sys.csproj",
         "projectName": "ptc_IGH_Sys",
-        "projectPath": "C:\\PTC\\EDPUnity\\ptc_web_net8\\ptc_IGH_Sys.csproj",
+        "projectPath": "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\ptc_IGH_Sys.csproj",
         "packagesPath": "C:\\Users\\calvin.tan\\.nuget\\packages\\",
-        "outputPath": "C:\\PTC\\EDPUnity\\ptc_web_net8\\obj\\",
+        "outputPath": "C:\\PTC\\EDPUnity\\ptc_IGH_Sys\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -27,7 +27,9 @@
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "C:\\Program Files\\dotnet\\library-packs": {},
-          "https://api.nuget.org/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {},
+          "https://nuget.telerik.com/v3/index.json": {},
+          "https://packagesource": {}
         },
         "frameworks": {
           "net8.0": {
@@ -76,6 +78,14 @@
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[13.0.3, )"
+            },
+            "System.Linq.Dynamic.Core": {
+              "target": "Package",
+              "version": "[1.7.2, )"
+            },
+            "Telerik.UI.for.AspNet.Core": {
+              "target": "Package",
+              "version": "[2019.1.220, )"
             }
           },
           "imports": [

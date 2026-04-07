@@ -1,0 +1,307 @@
+﻿@{
+    ViewData["Title"] = "Job Title Rates";
+    ViewData["BreadcrumbSection"] = "Master Data";
+    ViewData["BreadcrumbPage"] = "Job Title Rates";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Job Title Rate Master</h1>
+        <p class="page-subtitle">Manage rates per job title group</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-ptc-primary" onclick="openAddJobRateModal()">
+            <i class="bi bi-plus-lg"></i> Add Rate
+        </button>
+        <button class="btn-ptc-outline" onclick="exportJobRateGrid()">
+            <i class="bi bi-download"></i> Export
+        </button>
+    </div>
+</div>
+
+@* ── Filter Card (minimal) ── *@
+<div class="ptc-card mb-3">
+    <div class="ptc-card-body" style="padding:16px 20px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:5px;min-width:200px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Job Title Group</label>
+                <input type="text" id="queryJobGroup"
+                       class="k-textbox"
+                       style="width:100%;max-width:250px;"
+                       placeholder="Search by job group..." />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;min-width:180px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Rate Type</label>
+                <select id="queryRateTypeId" style="width:180px;"></select>
+            </div>
+            <div style="display:flex;gap:8px;padding-bottom:1px;">
+                <button class="btn-ptc-primary" onclick="refreshJobRateGrid()">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <button class="btn-ptc-outline" onclick="clearJobRateFilters()">
+                    <i class="bi bi-x-circle"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── Grid Card ── *@
+<div class="ptc-card">
+    <div class="ptc-card-header">
+        <h2 class="ptc-card-title">
+            <i class="bi bi-calculator"></i> Job Title Rates
+        </h2>
+        <span id="jobRateRecordCount"
+              style="font-size:0.75rem;color:var(--text-muted);background:#f1f5f9;
+                     padding:3px 10px;border-radius:20px;">0 records</span>
+    </div>
+    <div class="ptc-card-body" style="padding:0;">
+        <div id="jobrate_grid"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Store RateType data source globally for reuse in grid dropdown editor
+        var rateTypeDataSource = null;
+
+        $(function () {
+            kendo.culture('en-GB');
+
+            // Load Rate Types for filter dropdown and grid editor
+            rateTypeDataSource = new kendo.data.DataSource({
+                transport: {
+                    read: {
+                        url: '@Url.Action("GetRateTypesForDropdown", "Master")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: function() { return JSON.stringify({}); }
+                    }
+                },
+                schema: { data: 'Data' }
+            });
+
+            // Filter DropDownList for Rate Type
+            $('#queryRateTypeId').kendoDropDownList({
+                dataTextField: 'Rate_Description',
+                dataValueField: 'RateType_ID',
+                dataSource: rateTypeDataSource,
+                optionLabel: 'All Rate Types',
+                value: null
+            });
+
+            // Enter key search
+            $('#queryJobGroup').on('keypress', function (e) {
+                if (e.which === 13) refreshJobRateGrid();
+            });
+
+            /* ══════════════════════════════════════════════════════════
+               KENDO GRID – with DropDownList for RateTypeId
+            ══════════════════════════════════════════════════════════ */
+            $('#jobrate_grid').kendoGrid({
+                dataSource: {
+                    transport: {
+                        read: {
+                            url:  '@Url.Action("JobTitleRateMasterRead", "Master")',
+                            type: 'POST'
+                        },
+                        update: {
+                            url:  '@Url.Action("JobTitleRateMasterUpdate", "Master")',
+                            type: 'POST'
+                        },
+                        create: {
+                            url:  '@Url.Action("JobTitleRateMasterCreate", "Master")',
+                            type: 'POST'
+                        },
+                        destroy: {
+                            url:  '@Url.Action("JobTitleRateMasterDestroy", "Master")',
+                            type: 'POST'
+                        },
+                        parameterMap: function (data, operation) {
+                            if (operation === 'read') {
+                                return $.extend({}, data, getJobRateFilters());
+                            }
+                            return data;
+                        }
+                    },
+                    schema: {
+                        data:   'Data',
+                        total:  'Total',
+                        errors: 'Errors',
+                        model: {
+                            id: 'JobRateId',
+                            fields: {
+                                JobRateId:          { type: 'number', editable: false },
+                                JobTitleGroup:      { type: 'string', validation: { required: true } },
+                                RateTypeId:         { type: 'number', validation: { required: true } },
+                                RateTypeDescription:{ type: 'string', editable: false },
+                                RateValue:          { type: 'number', validation: { required: true, min: 0 } },
+                                Currency:           { type: 'string', validation: { required: true, maxlength: 3 } },
+                                EffectiveDate:      { type: 'date', validation: { required: true } }
+                            }
+                        }
+                    },
+                    pageSize:       50,
+                    serverPaging:   true,
+                    serverSorting:  true,
+                    sort:           { field: 'JobTitleGroup', dir: 'asc' },
+                    requestEnd: function (e) {
+                        if (e.type === 'read' && e.response) {
+                            var total = e.response.Total || 0;
+                            $('#jobRateRecordCount').text(total + ' record' + (total !== 1 ? 's' : ''));
+                        }
+                    },
+                    error: function (e) { handleJobRateGridError(e); }
+                },
+
+                columns: [
+                    { field: 'JobRateId', hidden: true },
+                    {
+                        field: 'JobTitleGroup', title: 'Job Title Group', width: 200
+                    },
+                    {
+                        field: 'RateTypeId', title: 'Rate Type', width: 200,
+                        template: '#: RateTypeDescription #',
+                        editor: function(container, options) {
+                            // Create a DropDownList editor for the RateTypeId field
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: 'Rate_Description',
+                                    dataValueField: 'RateType_ID',
+                                    dataSource: rateTypeDataSource,
+                                    value: options.model.RateTypeId,
+                                    optionLabel: 'Select Rate Type'
+                                });
+                        }
+                    },
+                    {
+                        field: 'RateValue', title: 'Rate Value', width: 130,
+                        format: '{0:N2}',
+                        attributes: { style: 'text-align:right;' }
+                    },
+                    {
+                        field: 'Currency', title: 'Currency', width: 100,
+                        editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: 'text',
+                                    dataValueField: 'value',
+                                    dataSource: [
+                                        { text: 'SGD', value: 'SGD' },
+                                        { text: 'USD', value: 'USD' },
+                                        { text: 'MYR', value: 'MYR' }
+                                    ],
+                                    value: options.model.Currency || 'SGD'
+                                });
+                        }
+                    },
+                    {
+                        field: 'EffectiveDate', title: 'Effective Date', width: 130,
+                        format: '{0:dd-MMM-yyyy}',
+                        editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDatePicker({ format: 'dd-MMM-yyyy' });
+                        }
+                    },
+                    {
+                        command: [{
+                            name: 'edit',
+                            text: { edit: ' Edit', update: ' Save', cancel: ' Cancel' }
+                        }],
+                        title: 'Action', width: 160
+                    }
+                ],
+
+                editable:   'inline',
+                pageable:   { pageSize: 10, pageSizes: [10, 20, 50], buttonCount: 5 },
+                sortable:   true,
+                scrollable: true,
+                height:     520,
+
+                dataBound: function () {
+                    this.thead.find('th').css({
+                        'background':   '#f8fafc',
+                        'font-weight':  '600',
+                        'font-size':    '0.77rem',
+                        'color':        '#475569',
+                        'border-color': '#e2e8f0'
+                    });
+                },
+
+                save: function () {
+                    KSwal.toast('success', 'Job rate updated.');
+                }
+            });
+
+            // Refresh grid when filter dropdown changes
+            $('#queryRateTypeId').data('kendoDropDownList').bind('change', function () {
+                refreshJobRateGrid();
+            });
+
+            refreshJobRateGrid();
+        });
+
+        function getJobRateFilters() {
+            var jobGroup = $('#queryJobGroup').val().trim();
+            var rateDdl = $('#queryRateTypeId').data('kendoDropDownList');
+            var rateId = rateDdl ? rateDdl.value() : '';
+            return {
+                jobTitleGroup: jobGroup,
+                rateTypeId: rateId && rateId !== '' ? parseInt(rateId) : null
+            };
+        }
+
+        function refreshJobRateGrid() {
+            var grid = $('#jobrate_grid').data('kendoGrid');
+            if (!grid) return;
+            grid.dataSource.query({
+                page: 1,
+                pageSize: grid.dataSource.pageSize(),
+                sort: grid.dataSource.sort()
+            });
+        }
+
+        function clearJobRateFilters() {
+            $('#queryJobGroup').val('');
+            var rateDdl = $('#queryRateTypeId').data('kendoDropDownList');
+            if (rateDdl) rateDdl.value('');
+            refreshJobRateGrid();
+        }
+
+        function exportJobRateGrid() {
+            var grid = $('#jobrate_grid').data('kendoGrid');
+            if (grid) { grid.saveAsExcel(); KSwal.toast('info', 'Exporting...'); }
+        }
+
+        function openAddJobRateModal() {
+            var grid = $('#jobrate_grid').data('kendoGrid');
+            if (grid) {
+                grid.addRow();
+            }
+        }
+
+        function handleJobRateGridError(e) {
+            var msg = 'An error occurred loading job rates.';
+            if (e.errors) {
+                var parts = [];
+                $.each(e.errors, function (k, v) {
+                    if (v.errors) parts.push(v.errors.join('\n'));
+                    else if (typeof v === 'string') parts.push(v);
+                });
+                if (parts.length) msg = parts.join('\n');
+            } else if (e.xhr) {
+                console.error('JobRate grid error:', e.xhr.status, e.xhr.responseText);
+                if (e.xhr.status === 401) msg = 'Session expired. Please log in again.';
+                if (e.xhr.status === 403) msg = 'You do not have permission.';
+                if (e.xhr.status === 500) msg = 'Server error. Check logs.';
+            }
+            KSwal.error('Grid Error', msg);
+        }
+    </script>
+}

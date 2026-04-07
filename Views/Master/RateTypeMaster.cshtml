@@ -1,0 +1,226 @@
+﻿@{
+    ViewData["Title"] = "Rate Type Master";
+    ViewData["BreadcrumbSection"] = "Master Data";
+    ViewData["BreadcrumbPage"] = "Rate Types";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Rate Type Master</h1>
+        <p class="page-subtitle">Manage Rate Types (IDs 1–9)</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-ptc-primary" onclick="openAddRateTypeModal()">
+            <i class="bi bi-plus-lg"></i> Add Rate Type
+        </button>
+        <button class="btn-ptc-outline" onclick="exportRateTypeGrid()">
+            <i class="bi bi-download"></i> Export
+        </button>
+    </div>
+</div>
+
+@* ── Minimal Filter Card ── *@
+<div class="ptc-card mb-3">
+    <div class="ptc-card-body" style="padding:16px 20px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:5px;flex:2;min-width:200px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Rate Description</label>
+                <input type="text" id="queryRateDesc"
+                       class="k-textbox"
+                       style="width:100%;max-width:300px;"
+                       placeholder="Search by description..." />
+            </div>
+            <div style="display:flex;gap:8px;padding-bottom:1px;">
+                <button class="btn-ptc-primary" onclick="refreshRateTypeGrid()">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <button class="btn-ptc-outline" onclick="clearRateTypeFilters()">
+                    <i class="bi bi-x-circle"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── Grid Card ── *@
+<div class="ptc-card">
+    <div class="ptc-card-header">
+        <h2 class="ptc-card-title">
+            <i class="bi bi-tags"></i> Rate Types
+        </h2>
+        <span id="rateTypeRecordCount"
+              style="font-size:0.75rem;color:var(--text-muted);background:#f1f5f9;
+                     padding:3px 10px;border-radius:20px;">0 records</span>
+    </div>
+    <div class="ptc-card-body" style="padding:0;">
+        <div id="ratetype_grid"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            kendo.culture('en-GB');
+
+            // Enter key search
+            $('#queryRateDesc').on('keypress', function (e) {
+                if (e.which === 13) refreshRateTypeGrid();
+            });
+
+            /* ══════════════════════════════════════════════════════════
+               KENDO GRID – Pure JS, no DataSourceRequest
+            ══════════════════════════════════════════════════════════ */
+            $('#ratetype_grid').kendoGrid({
+                dataSource: {
+                    transport: {
+                        read: {
+                            url:  '@Url.Action("RateTypeMasterRead", "Master")',
+                            type: 'POST'
+                        },
+                        update: {
+                            url:  '@Url.Action("RateTypeMasterUpdate", "Master")',
+                            type: 'POST'
+                        },
+                        create: {
+                            url:  '@Url.Action("RateTypeMasterCreate", "Master")',
+                            type: 'POST'
+                        },
+                        destroy: {
+                            url:  '@Url.Action("RateTypeMasterDestroy", "Master")',
+                            type: 'POST'
+                        },
+                        parameterMap: function (data, operation) {
+                            if (operation === 'read') {
+                                return $.extend({}, data, getRateTypeFilters());
+                            }
+                            return data;
+                        }
+                    },
+                    schema: {
+                        data:   'Data',
+                        total:  'Total',
+                        errors: 'Errors',
+                        model: {
+                            id: 'RateType_ID',
+                            fields: {
+                                RateType_ID:        { type: 'number', validation: { required: true, min: 1, max: 9 } },
+                                Rate_Description:   { type: 'string', validation: { required: true } },
+                                Payment_Frequency:  { type: 'string', validation: { required: true } }
+                            }
+                        }
+                    },
+                    pageSize:       20,
+                    serverPaging:   true,
+                    serverSorting:  true,
+                    sort:           { field: 'RateType_ID', dir: 'asc' },
+                    requestEnd: function (e) {
+                        if (e.type === 'read' && e.response) {
+                            var total = e.response.Total || 0;
+                            $('#rateTypeRecordCount').text(total + ' record' + (total !== 1 ? 's' : ''));
+                        }
+                    },
+                    error: function (e) { handleRateTypeGridError(e); }
+                },
+
+                columns: [
+                    {
+                        field: 'RateType_ID', title: 'ID', width: 80,
+                        attributes: { style: 'text-align:center;' }
+                    },
+                    {
+                        field: 'Rate_Description', title: 'Rate Description', width: 250
+                    },
+                    {
+                        field: 'Payment_Frequency', title: 'Payment Frequency', width: 180,
+                        template: function (d) {
+                            var freq = d.Payment_Frequency || '';
+                            var color = freq === 'Monthly' ? '#dbeafe' : (freq === 'Weekly' ? '#dcfce7' : '#fef3c7');
+                            return '<span style="background:' + color + ';padding:2px 12px;border-radius:20px;font-size:0.75rem;">' + freq + '</span>';
+                        }
+                    },
+                    {
+                        command: [{
+                            name: 'edit',
+                            text: { edit: ' Edit', update: ' Save', cancel: ' Cancel' }
+                        }],
+                        title: 'Action', width: 160
+                    }
+                ],
+
+                editable:   'inline',
+                pageable:   { pageSize: 10, pageSizes: [10, 20, 50], buttonCount: 5 },
+                sortable:   true,
+                scrollable: true,
+                height:     400,
+
+                dataBound: function () {
+                    this.thead.find('th').css({
+                        'background':   '#f8fafc',
+                        'font-weight':  '600',
+                        'font-size':    '0.77rem',
+                        'color':        '#475569',
+                        'border-color': '#e2e8f0'
+                    });
+                },
+
+                save: function () {
+                    KSwal.toast('success', 'Rate type updated.');
+                }
+            });
+
+            refreshRateTypeGrid();
+        });
+
+        function getRateTypeFilters() {
+            var desc = $('#queryRateDesc').val().trim();
+            return { rateDescription: desc };
+        }
+
+        function refreshRateTypeGrid() {
+            var grid = $('#ratetype_grid').data('kendoGrid');
+            if (!grid) return;
+            grid.dataSource.query({
+                page: 1,
+                pageSize: grid.dataSource.pageSize(),
+                sort: grid.dataSource.sort()
+            });
+        }
+
+        function clearRateTypeFilters() {
+            $('#queryRateDesc').val('');
+            refreshRateTypeGrid();
+        }
+
+        function exportRateTypeGrid() {
+            var grid = $('#ratetype_grid').data('kendoGrid');
+            if (grid) { grid.saveAsExcel(); KSwal.toast('info', 'Exporting...'); }
+        }
+
+        function openAddRateTypeModal() {
+            // Since we use inline editing, we can just trigger create row
+            var grid = $('#ratetype_grid').data('kendoGrid');
+            if (grid) {
+                grid.addRow();
+            }
+        }
+
+        function handleRateTypeGridError(e) {
+            var msg = 'An error occurred loading rate types.';
+            if (e.errors) {
+                var parts = [];
+                $.each(e.errors, function (k, v) {
+                    if (v.errors) parts.push(v.errors.join('\n'));
+                    else if (typeof v === 'string') parts.push(v);
+                });
+                if (parts.length) msg = parts.join('\n');
+            } else if (e.xhr) {
+                console.error('RateType grid error:', e.xhr.status, e.xhr.responseText);
+                if (e.xhr.status === 401) msg = 'Session expired. Please log in again.';
+                if (e.xhr.status === 403) msg = 'You do not have permission.';
+                if (e.xhr.status === 500) msg = 'Server error. Check logs.';
+            }
+            KSwal.error('Grid Error', msg);
+        }
+    </script>
+}
