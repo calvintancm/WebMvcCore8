@@ -277,9 +277,14 @@
             });
 
             $('#btnKSwalSuccess').on('click', function () {
+            // Show a Kendo alert with version info
                 kendo.alert("Kendo JS Script! -> " + kendo.version);
+
+                // Show your SweetAlert success toast
                 KSwal.success('Saved!', 'Gate entry recorded successfully.');
+                
             });
+
 
             $('#btnKSwalError').on('click', function () {
                 KSwal.error('Connection Failed', 'Unable to reach the authentication server. Please try again.');

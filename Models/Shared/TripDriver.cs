@@ -36,6 +36,8 @@ namespace ptc_IGH_Sys.Models.Shared
 
         public virtual double Allowance { get; set; }
 
+        public int PaymentScheme_Id { get; set; }
+        public int Department_Id { get; set; }
         /*Custom*/
         [UIHint("PaymentSchemeEditor")]
         public virtual PaymentScheme PaymentScheme { get; set; }

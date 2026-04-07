@@ -30,6 +30,11 @@ namespace ptc_IGH_Sys.Data
 
         // ✅ ADD HERE
         public DbSet<IGH_Leave_Transaction> IGH_Leave_Transactions { get; set; }
+
+        public DbSet<IGH_Salary_Adjustment_Transaction> IGH_Salary_Adjustment_Transaction { get; set; }
+
+        public DbSet<TripDriver> TripDrivers { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

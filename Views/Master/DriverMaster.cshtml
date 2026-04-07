@@ -1,0 +1,307 @@
+﻿@{
+    ViewData["Title"] = "Driver Master";
+    ViewData["BreadcrumbSection"] = "Master Data";
+    ViewData["BreadcrumbPage"] = "Drivers";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Driver Master</h1>
+        <p class="page-subtitle">Manage Trip Drivers</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-ptc-primary" onclick="openAddDriverModal()">
+            <i class="bi bi-plus-lg"></i> Add Driver
+        </button>
+        <button class="btn-ptc-outline" onclick="exportDriverGrid()">
+            <i class="bi bi-download"></i> Export
+        </button>
+    </div>
+</div>
+
+@* ── Minimal Filter Card ── *@
+<div class="ptc-card mb-3">
+    <div class="ptc-card-body" style="padding:16px 20px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;">
+
+            <div style="display:flex;flex-direction:column;gap:5px;flex:2;min-width:200px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Driver Name</label>
+                <input type="text" id="queryDriverName"
+                       class="k-textbox"
+                       style="width:100%;max-width:300px;"
+                       placeholder="Search by name..." />
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:5px;min-width:130px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Status</label>
+                <select id="queryActiveOnly" style="width:130px;">
+                    <option value="">All</option>
+                    <option value="true">Active Only</option>
+                    <option value="false">Inactive Only</option>
+                </select>
+            </div>
+
+            <div style="display:flex;gap:8px;padding-bottom:1px;">
+                <button class="btn-ptc-primary" onclick="refreshDriverGrid()">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <button class="btn-ptc-outline" onclick="clearDriverFilters()">
+                    <i class="bi bi-x-circle"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── Grid Card ── *@
+<div class="ptc-card">
+    <div class="ptc-card-header">
+        <h2 class="ptc-card-title">
+            <i class="bi bi-people"></i> Driver List
+        </h2>
+        <span id="driverRecordCount"
+              style="font-size:0.75rem;color:var(--text-muted);background:#f1f5f9;
+                     padding:3px 10px;border-radius:20px;">0 records</span>
+    </div>
+    <div class="ptc-card-body" style="padding:0;">
+        <div id="driver_grid"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            kendo.culture('en-GB');
+
+            // Convert select to Kendo DropDownList for consistent styling
+            $('#queryActiveOnly').kendoDropDownList({
+                dataTextField: 'text',
+                dataValueField: 'value',
+                dataSource: [
+                    { text: 'All', value: '' },
+                    { text: 'Active Only', value: 'true' },
+                    { text: 'Inactive Only', value: 'false' }
+                ],
+                value: ''
+            });
+
+            // Enter key search
+            $('#queryDriverName').on('keypress', function (e) {
+                if (e.which === 13) refreshDriverGrid();
+            });
+
+            /* ══════════════════════════════════════════════════════════
+               KENDO GRID – Pure JS, no DataSourceRequest
+            ══════════════════════════════════════════════════════════ */
+            $('#driver_grid').kendoGrid({
+                dataSource: {
+                    transport: {
+                        read: {
+                            url:  '@Url.Action("DriverMasterRead", "Master")',
+                            type: 'POST'
+                        },
+                        update: {
+                            url:  '@Url.Action("DriverMasterUpdate", "Master")',
+                            type: 'POST'
+                        },
+                        create: {
+                            url:  '@Url.Action("DriverMasterCreate", "Master")',
+                            type: 'POST'
+                        },
+                        destroy: {
+                            url:  '@Url.Action("DriverMasterDestroy", "Master")',
+                            type: 'POST'
+                        },
+                        parameterMap: function (data, operation) {
+                            if (operation === 'read') {
+                                return $.extend({}, data, getDriverFilters());
+                            }
+                            return data;
+                        }
+                    },
+                    schema: {
+                        data:   'Data',
+                        total:  'Total',
+                        errors: 'Errors',
+                        model: {
+                            id: 'Id',
+                            fields: {
+                                Id:               { type: 'number', editable: false },
+                                Name:             { type: 'string', validation: { required: true } },
+                                LicenseNumber:    { type: 'string' },
+                                NRIC:             { type: 'string' },
+                                MobileNumber:     { type: 'string', validation: { required: true } },
+                                Active:           { type: 'boolean' },
+                                Allowance:        { type: 'number', validation: { min: 0 } },
+                                Nationality:      { type: 'string' },
+                                Shift:            { type: 'string' },
+                                JobTitle_Group:   { type: 'string' },
+                                // DepartmentName:   { type: 'string', editable: false },
+                                // PaymentSchemeName:{ type: 'string', editable: false },
+                                CreatedAt:        { type: 'date',   editable: false },
+                                UpdatedAt:        { type: 'date',   editable: false }
+                            }
+                        }
+                    },
+                    pageSize:       50,
+                    serverPaging:   true,
+                    serverSorting:  true,
+                    sort:           { field: 'Name', dir: 'asc' },
+                    requestEnd: function (e) {
+                        if (e.type === 'read' && e.response) {
+                            var total = e.response.Total || 0;
+                            $('#driverRecordCount').text(total + ' record' + (total !== 1 ? 's' : ''));
+                        }
+                    },
+                    error: function (e) { handleDriverGridError(e); }
+                },
+
+                columns: [
+                    { field: 'Id', hidden: true },
+                    {
+                        field: 'Name', title: 'Driver Name', width: 200,
+                        template: '<span style="font-weight:600;">#: Name #</span>'
+                    },
+                    { field: 'LicenseNumber', title: 'License No', width: 130 },
+                    { field: 'NRIC', title: 'NRIC', width: 130 },
+                    { field: 'MobileNumber', title: 'Mobile', width: 130 },
+                    {
+                        field: 'Active', title: 'Active', width: 90,
+                        template: '# if(Active) { # <span class="badge-active">Active</span> # } else { # <span class="badge-inactive">Inactive</span> # } #',
+                        attributes: { style: 'text-align:center;' }
+                    },
+                    {
+                        field: 'Allowance', title: 'Allowance', width: 120,
+                        format: '{0:N2}',
+                        attributes: { style: 'text-align:right;' }
+                    },
+                    { field: 'Nationality', title: 'Nationality', width: 120 },
+                    { field: 'Shift', title: 'Shift', width: 100 },
+                    { field: 'JobTitle_Group', title: 'Job Group', width: 130 },
+                    // { field: 'DepartmentName', title: 'Department', width: 150 },
+                    // { field: 'PaymentSchemeName', title: 'Payment Scheme', width: 150 },
+                    {
+                        field: 'CreatedAt', title: 'Created', width: 140,
+                        template: function(d) {
+                            return d.CreatedAt ? kendo.toString(kendo.parseDate(d.CreatedAt), 'dd-MMM-yyyy') : '';
+                        }
+                    },
+                    {
+                        command: [{
+                            name: 'edit',
+                            text: { edit: ' Edit', update: ' Save', cancel: ' Cancel' }
+                        }],
+                        title: 'Action', width: 160
+                    }
+                ],
+
+                editable:   'inline',
+                pageable:   { pageSize: 50, pageSizes: [25, 50, 100, 200], buttonCount: 5 },
+                sortable:   true,
+                scrollable: true,
+                height:     560,
+
+                dataBound: function () {
+                    this.thead.find('th').css({
+                        'background':   '#f8fafc',
+                        'font-weight':  '600',
+                        'font-size':    '0.77rem',
+                        'color':        '#475569',
+                        'border-color': '#e2e8f0'
+                    });
+                },
+
+                save: function () {
+                    KSwal.toast('success', 'Driver record updated.');
+                }
+            });
+
+            // Refresh grid when filter dropdown changes
+            $('#queryActiveOnly').data('kendoDropDownList').bind('change', function () {
+                refreshDriverGrid();
+            });
+
+            refreshDriverGrid();
+        });
+
+        function getDriverFilters() {
+            var name = $('#queryDriverName').val().trim();
+            var activeDdl = $('#queryActiveOnly').data('kendoDropDownList');
+            var activeVal = activeDdl ? activeDdl.value() : '';
+            // Convert to boolean or null
+            var activeOnly = null;
+            if (activeVal === 'true') activeOnly = true;
+            else if (activeVal === 'false') activeOnly = false;
+            return {
+                driverName: name,
+                activeOnly: activeOnly
+            };
+        }
+
+        function refreshDriverGrid() {
+            var grid = $('#driver_grid').data('kendoGrid');
+            if (!grid) return;
+            grid.dataSource.query({
+                page: 1,
+                pageSize: grid.dataSource.pageSize(),
+                sort: grid.dataSource.sort()
+            });
+        }
+
+        function clearDriverFilters() {
+            $('#queryDriverName').val('');
+            var activeDdl = $('#queryActiveOnly').data('kendoDropDownList');
+            if (activeDdl) activeDdl.value('');
+            refreshDriverGrid();
+        }
+
+        function exportDriverGrid() {
+            var grid = $('#driver_grid').data('kendoGrid');
+            if (grid) { grid.saveAsExcel(); KSwal.toast('info', 'Exporting...'); }
+        }
+
+        function openAddDriverModal() {
+            KSwal.alert('Add Driver form coming soon.', 'Add Driver', 'info');
+        }
+
+        function handleDriverGridError(e) {
+            var msg = 'An error occurred loading drivers.';
+            if (e.errors) {
+                var parts = [];
+                $.each(e.errors, function (k, v) {
+                    if (v.errors) parts.push(v.errors.join('\n'));
+                    else if (typeof v === 'string') parts.push(v);
+                });
+                if (parts.length) msg = parts.join('\n');
+            } else if (e.xhr) {
+                console.error('Driver grid error:', e.xhr.status, e.xhr.responseText);
+                if (e.xhr.status === 401) msg = 'Session expired. Please log in again.';
+                if (e.xhr.status === 403) msg = 'You do not have permission.';
+                if (e.xhr.status === 500) msg = 'Server error. Check logs.';
+            }
+            KSwal.error('Grid Error', msg);
+        }
+    </script>
+
+    <style>
+        .badge-active {
+            background: #dcfce7;
+            color: #15803d;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-inactive {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+    </style>
+}

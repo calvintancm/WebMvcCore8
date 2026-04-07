@@ -270,5 +270,209 @@ namespace ptc_IGH_Sys.Controllers
                 return Json(KendoGridResult<LeaveTransactionViewModel>.Error(ex.Message));
             }
         }
+
+
+
+
+        /* ════════════════════════════════════════════════════════════
+           POST: /IGH/SalaryAdjustmentRead
+        ════════════════════════════════════════════════════════════ */
+        [HttpPost]
+        public async Task<IActionResult> SalaryAdjustmentRead(
+            [FromForm] KendoGridRequest kendo,
+            [FromForm] int? adjustmentMonth = null,
+            [FromForm] int? adjustmentYear = null,
+            [FromForm] string driverName = null)
+        {
+            _logger.LogInformation(
+                "SalaryAdjustmentRead page={P} size={S} month={M} year={Y} driver='{D}'",
+                kendo?.Page, kendo?.PageSize, adjustmentMonth, adjustmentYear, driverName);
+
+            try
+            {
+                var query = _db.IGH_Salary_Adjustment_Transaction
+                    .AsNoTracking()
+                    .AsQueryable();
+
+                if (adjustmentYear.HasValue && adjustmentYear.Value > 0)
+                    query = query.Where(x => x.AdjustmentDate.Year == adjustmentYear.Value);
+
+                if (adjustmentMonth.HasValue && adjustmentMonth.Value > 0)
+                    query = query.Where(x => x.AdjustmentDate.Month == adjustmentMonth.Value);
+
+                if (!string.IsNullOrWhiteSpace(driverName))
+                {
+                    var term = driverName.Trim().ToUpper();
+                    query = query.Where(x =>
+                        x.DriverName != null &&
+                        x.DriverName.ToUpper().Contains(term));
+                }
+
+                var result = await kendo.ToResultAsync(
+                    query,
+                    x => new SalaryAdjustmentViewModel
+                    {
+                        Id = x.Id,
+                        DriverId = x.DriverId,
+                        DriverName = x.DriverName ?? string.Empty,
+                        AdjustmentDate = x.AdjustmentDate,
+                        AdjustmentMonth = x.AdjustmentDate.Month,
+                        AdjustmentType = x.AdjustmentType ?? string.Empty,
+                        AdjustmentAmount = x.AdjustmentAmount,
+                        Remarks = x.Remarks ?? string.Empty,
+                        CreatedAt = x.CreatedAt
+                    },
+                    defaultSort: "DriverName"
+                );
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SalaryAdjustmentRead failed");
+                return Json(KendoGridResult<SalaryAdjustmentViewModel>.Error(ex.Message));
+            }
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           POST: /IGH/SalaryAdjustmentUpdate
+        ════════════════════════════════════════════════════════════ */
+        [HttpPost]
+        public async Task<IActionResult> SalaryAdjustmentUpdate(
+            [FromForm] SalaryAdjustmentViewModel viewModel)
+        {
+            try
+            {
+                if (viewModel == null)
+                    return Json(KendoGridResult<SalaryAdjustmentViewModel>
+                        .Error("Invalid request data."));
+
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Any())
+                        .ToDictionary(
+                            k => k.Key,
+                            v => v.Value.Errors.Select(e => e.ErrorMessage).ToArray());
+                    return Json(new
+                    {
+                        Data = new[] { viewModel },
+                        Total = 1,
+                        Errors = errors
+                    });
+                }
+
+                var record = await _db.IGH_Salary_Adjustment_Transaction
+                    .FirstOrDefaultAsync(x => x.Id == viewModel.Id);
+
+                if (record == null)
+                    return Json(KendoGridResult<SalaryAdjustmentViewModel>
+                        .Error($"Record #{viewModel.Id} not found."));
+
+                // Update only editable fields
+                record.AdjustmentType = viewModel.AdjustmentType;
+                record.AdjustmentAmount = viewModel.AdjustmentAmount;
+                record.Remarks = viewModel.Remarks;
+
+                await _db.SaveChangesAsync();
+
+                // Return updated values back to grid
+                viewModel.DriverName = record.DriverName;
+                viewModel.CreatedAt = record.CreatedAt;
+                viewModel.AdjustmentDate = record.AdjustmentDate;
+                viewModel.AdjustmentMonth = record.AdjustmentDate.Month;
+
+                _logger.LogInformation(
+                    "SalaryAdjustment #{Id} updated by {User}",
+                    viewModel.Id, User.Identity?.Name);
+
+                return Json(new { Data = new[] { viewModel }, Total = 1 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SalaryAdjustmentUpdate failed Id={Id}", viewModel?.Id);
+                return Json(KendoGridResult<SalaryAdjustmentViewModel>.Error(ex.Message));
+            }
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           POST: /IGH/SalaryAdjustmentCreate
+        ════════════════════════════════════════════════════════════ */
+        [HttpPost]
+        public async Task<IActionResult> SalaryAdjustmentCreate(
+            [FromForm] SalaryAdjustmentViewModel viewModel)
+        {
+            try
+            {
+                if (viewModel == null || !ModelState.IsValid)
+                    return Json(KendoGridResult<SalaryAdjustmentViewModel>
+                        .Error("Invalid request data."));
+
+                var newRecord = new IGH_Salary_Adjustment_Transaction
+                {
+                    DriverId = viewModel.DriverId,
+                    DriverName = viewModel.DriverName,
+                    AdjustmentDate = viewModel.AdjustmentDate == default(DateTime)
+                        ? DateTime.Today
+                        : viewModel.AdjustmentDate,
+                    AdjustmentType = viewModel.AdjustmentType?.ToUpper() ?? string.Empty,
+                    AdjustmentAmount = viewModel.AdjustmentAmount,
+                    Remarks = viewModel.Remarks,
+                    CreatedAt = DateTime.Now
+                };
+
+                _db.IGH_Salary_Adjustment_Transaction.Add(newRecord);
+                await _db.SaveChangesAsync();
+
+                viewModel.Id = newRecord.Id;
+                viewModel.CreatedAt = newRecord.CreatedAt;
+                viewModel.AdjustmentMonth = newRecord.AdjustmentDate.Month;
+
+                _logger.LogInformation(
+                    "SalaryAdjustment created Id={Id} by {User}",
+                    newRecord.Id, User.Identity?.Name);
+
+                return Json(new { Data = new[] { viewModel }, Total = 1 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SalaryAdjustmentCreate failed");
+                return Json(KendoGridResult<SalaryAdjustmentViewModel>.Error(ex.Message));
+            }
+        }
+
+        /* ════════════════════════════════════════════════════════════
+           POST: /IGH/SalaryAdjustmentDestroy
+        ════════════════════════════════════════════════════════════ */
+        [HttpPost]
+        public async Task<IActionResult> SalaryAdjustmentDestroy(
+            [FromForm] SalaryAdjustmentViewModel viewModel)
+        {
+            try
+            {
+                if (viewModel != null)
+                {
+                    var record = await _db.IGH_Salary_Adjustment_Transaction
+                        .FirstOrDefaultAsync(x => x.Id == viewModel.Id);
+
+                    if (record != null)
+                    {
+                        _db.IGH_Salary_Adjustment_Transaction.Remove(record);
+                        await _db.SaveChangesAsync();
+
+                        _logger.LogInformation(
+                            "SalaryAdjustment #{Id} deleted by {User}",
+                            viewModel.Id, User.Identity?.Name);
+                    }
+                }
+
+                return Json(new { Data = new[] { viewModel }, Total = 1 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SalaryAdjustmentDestroy failed Id={Id}", viewModel?.Id);
+                return Json(KendoGridResult<SalaryAdjustmentViewModel>.Error(ex.Message));
+            }
+        }
     }
 }

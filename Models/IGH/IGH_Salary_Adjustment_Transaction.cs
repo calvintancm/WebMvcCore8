@@ -21,7 +21,8 @@ namespace ptc_IGH_Sys.Models.IGH
         /// Still keep DriverId + navigation property for integrity.
         /// </summary>
         [StringLength(200)]
-        public string Driver_Name { get; set; }
+        [Column("Driver_Name")]
+        public string DriverName { get; set; }
 
         [Required]
         [Column("Adjustment_Date")]

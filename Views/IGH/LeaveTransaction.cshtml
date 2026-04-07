@@ -126,8 +126,7 @@
             $('#leave_grid').kendoGrid({
 
                 dataSource: {
-                    /* ❌ NO type: 'aspnetmvc-ajax' — this triggers DataSourceRequest which crashes */
-
+                   
                     transport: {
                         read: {
                             url:  '@Url.Action("LeaveTransactionRead", "IGH")',
@@ -182,6 +181,7 @@
                     serverPaging:  true,
                     serverSorting: true,
                     sort: { field: 'DriverName', dir: 'asc' },
+
 
                     requestEnd: function (e) {
                         if (e.type === 'read' && e.response) {
@@ -330,6 +330,8 @@
                 pageSize: grid.dataSource.pageSize(),
                 sort:     grid.dataSource.sort()
             });
+
+             kendo.ui.progress($("#leave_grid"), false);
         }
 
         function clearLeaveFilters() {

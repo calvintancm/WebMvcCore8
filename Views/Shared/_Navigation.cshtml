@@ -1,233 +1,481 @@
-@* ═══════════════════════════════════════════
-   _Navigation.cshtml — Left Sidebar
-   FIXED: Submenu correctly hidden on collapse
-          AND correctly restored on expand
-   ROOT CAUSE: hideAllSubmenus() removed Bootstrap
-   'show' class but showAllSubmenus() never
-   restored it — so click on parent did nothing
-   after expand.
-   FIX: Save which submenus were open BEFORE
-        collapsing, then restore them on expand.
-═══════════════════════════════════════════ *@
+@* ═══════════════════════════════════════════════════════
+   _Navigation.cshtml
+   EXPANDED : normal accordion submenu
+   COLLAPSED: flyout popup submenu (like screenshot)
+   TOOLTIP  : shown on all items when collapsed
+═══════════════════════════════════════════════════════ *@
 <style>
 
+    /* ══════════════════════════════════════════
+               SIDEBAR BASE
+            ══════════════════════════════════════════ */
     #sidebar {
         position: fixed;
-        top: 0; left: 0; bottom: 0;
+        top: 0;
+        left: 0;
+        bottom: 0;
         width: var(--sidebar-w);
         background: var(--sb-bg);
-        display: flex; flex-direction: column;
+        display: flex;
+        flex-direction: column;
         z-index: 1040;
         transition: width var(--transition);
+        overflow: visible; /* ← must be visible for flyout */
+    }
+
+    body.sidebar-collapsed #sidebar {
+        width: var(--sidebar-w-collapsed);
+    }
+
+    /* ── Brand ─────────────────────────────── */
+    .sb-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 17px;
+        height: var(--topbar-h);
+        background: var(--sb-bg-top);
+        border-bottom: 1px solid var(--sb-border);
+        flex-shrink: 0;
+        text-decoration: none;
         overflow: hidden;
     }
 
-    body.sidebar-collapsed #sidebar { width: var(--sidebar-w-collapsed); }
-
-    .sb-brand {
-        display: flex; align-items: center; gap: 12px;
-        padding: 0 17px; height: var(--topbar-h);
-        background: var(--sb-bg-top);
-        border-bottom: 1px solid var(--sb-border);
-        flex-shrink: 0; text-decoration: none; overflow: hidden;
-    }
-
     .sb-brand-icon {
-        width: 36px; height: 36px;
+        width: 36px;
+        height: 36px;
         background: linear-gradient(135deg, #3b96e8, #7ec8f0);
-        border-radius: 9px; flex-shrink: 0;
-        display: flex; align-items: center; justify-content: center;
+        border-radius: 9px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         box-shadow: 0 4px 12px rgba(59,150,232,0.45);
     }
 
-    .sb-brand-icon i { color: #fff; font-size: 17px; }
+        .sb-brand-icon i {
+            color: #fff;
+            font-size: 17px;
+        }
 
     .sb-brand-text {
         overflow: hidden;
         transition: opacity var(--transition), max-width var(--transition);
-        white-space: nowrap; max-width: 200px;
+        white-space: nowrap;
+        max-width: 200px;
     }
 
     .sb-brand-name {
-        font-family: 'Sora', sans-serif; font-size: 0.95rem;
-        font-weight: 700; color: #fff; line-height: 1.2;
+        font-family: 'Sora', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.2;
     }
 
-    .sb-brand-sub { font-size: 0.67rem; color: var(--sb-text); letter-spacing: 0.04em; }
-    body.sidebar-collapsed .sb-brand-text { opacity: 0; max-width: 0; }
+    .sb-brand-sub {
+        font-size: 0.67rem;
+        color: var(--sb-text);
+        letter-spacing: 0.04em;
+    }
 
+    body.sidebar-collapsed .sb-brand-text {
+        opacity: 0;
+        max-width: 0;
+    }
+
+    /* ── Nav scroll ─────────────────────────── */
     .sb-nav {
-        flex: 1; overflow-y: auto; overflow-x: hidden;
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: visible;
         padding: 8px 0;
         scrollbar-width: thin;
         scrollbar-color: var(--sb-hover) transparent;
     }
 
-    .sb-nav::-webkit-scrollbar       { width: 3px; }
-    .sb-nav::-webkit-scrollbar-track { background: transparent; }
-    .sb-nav::-webkit-scrollbar-thumb { background: var(--sb-hover); border-radius: 3px; }
-    .sb-nav ul { list-style: none; padding: 0; margin: 0; }
+        .sb-nav::-webkit-scrollbar {
+            width: 3px;
+        }
 
+        .sb-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sb-nav::-webkit-scrollbar-thumb {
+            background: var(--sb-hover);
+            border-radius: 3px;
+        }
+
+        .sb-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+    /* ── Section titles ─────────────────────── */
     .sb-section-title {
         padding: 13px 20px 4px;
-        font-size: 0.68rem; font-weight: 700;
+        font-size: 0.68rem;
+        font-weight: 700;
         color: var(--sb-text-header);
-        text-transform: uppercase; letter-spacing: 0.12em;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
         white-space: nowrap;
         transition: opacity var(--transition), max-height var(--transition), padding var(--transition);
-        max-height: 40px; overflow: hidden;
+        max-height: 40px;
+        overflow: hidden;
     }
 
     body.sidebar-collapsed .sb-section-title {
-        opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0;
+        opacity: 0;
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
     }
 
+    /* ── Nav links ──────────────────────────── */
     .sb-nav-link {
-        display: flex; align-items: center; gap: 11px;
+        display: flex;
+        align-items: center;
+        gap: 11px;
         padding: 10px 17px;
-        color: var(--sb-text); text-decoration: none;
-        cursor: pointer; white-space: nowrap; position: relative;
+        color: var(--sb-text);
+        text-decoration: none;
+        cursor: pointer;
+        white-space: nowrap;
+        position: relative;
         transition: color var(--transition), background var(--transition);
-        border: none; background: none;
-        width: 100%; text-align: left;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
         font-family: 'DM Sans', sans-serif;
     }
 
-    .sb-nav-link:hover      { background: var(--sb-hover); color: #fff; text-decoration: none; }
-    .sb-nav-link.active     { background: var(--sb-active-bg); color: #fff; }
+        .sb-nav-link:hover {
+            background: var(--sb-hover);
+            color: #fff;
+            text-decoration: none;
+        }
 
-    .sb-nav-link.active::before {
-        content: ''; position: absolute; left: 0; top: 5px; bottom: 5px;
-        width: 3px; background: var(--sb-active-line); border-radius: 0 3px 3px 0;
-    }
+        .sb-nav-link.active {
+            background: var(--sb-active-bg);
+            color: #fff;
+        }
+
+            .sb-nav-link.active::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 5px;
+                bottom: 5px;
+                width: 3px;
+                background: var(--sb-active-line);
+                border-radius: 0 3px 3px 0;
+            }
 
     /* Icons — NEVER hidden */
     .sb-nav-icon {
-        width: 22px; min-width: 22px; flex-shrink: 0;
-        font-size: 15px; text-align: center;
-        display: flex; align-items: center; justify-content: center;
-        opacity: 1; visibility: visible; overflow: visible;
+        width: 22px;
+        min-width: 22px;
+        flex-shrink: 0;
+        font-size: 15px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+        visibility: visible;
     }
 
+    /* Labels */
     .sb-nav-label {
-        font-size: 0.9rem; font-weight: 500;
-        flex: 1; color: inherit;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        font-size: 0.9rem;
+        font-weight: 500;
+        flex: 1;
+        color: inherit;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         transition: opacity var(--transition), max-width var(--transition);
         max-width: 200px;
     }
 
+    /* Badges */
     .sb-badge {
-        font-size: 0.6rem; font-weight: 700;
-        padding: 2px 7px; border-radius: 20px;
-        color: #fff; line-height: 1.5; flex-shrink: 0;
+        font-size: 0.6rem;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 20px;
+        color: #fff;
+        line-height: 1.5;
+        flex-shrink: 0;
         transition: opacity var(--transition), max-width var(--transition);
-        overflow: hidden; max-width: 60px;
+        overflow: hidden;
+        max-width: 60px;
     }
 
-    .sb-badge.badge-blue   { background: var(--accent-lt); }
-    .sb-badge.badge-orange { background: var(--gold); }
-    .sb-badge.badge-red    { background: var(--clr-danger); }
+        .sb-badge.badge-blue {
+            background: var(--accent-lt);
+        }
 
+        .sb-badge.badge-orange {
+            background: var(--gold);
+        }
+
+        .sb-badge.badge-red {
+            background: var(--clr-danger);
+        }
+
+    /* Chevron */
     .sb-chevron {
-        font-size: 10px; color: var(--sb-text-header); flex-shrink: 0;
-        overflow: hidden; max-width: 20px;
+        font-size: 10px;
+        color: var(--sb-text-header);
+        flex-shrink: 0;
+        overflow: hidden;
+        max-width: 20px;
         transition: transform 0.22s, opacity var(--transition), max-width var(--transition);
     }
 
-    .sb-nav-link[aria-expanded="true"] .sb-chevron { transform: rotate(90deg); }
+    .sb-nav-link[aria-expanded="true"] .sb-chevron {
+        transform: rotate(90deg);
+    }
 
-    /* Collapsed — hide labels only, never icons */
+    /* ══════════════════════════════════════════
+               COLLAPSED — hide labels, show icons only
+            ══════════════════════════════════════════ */
     body.sidebar-collapsed .sb-nav-label,
     body.sidebar-collapsed .sb-badge,
     body.sidebar-collapsed .sb-chevron {
-        opacity: 0; max-width: 0; pointer-events: none;
+        opacity: 0;
+        max-width: 0;
+        pointer-events: none;
     }
 
     body.sidebar-collapsed .sb-nav > ul > li > .sb-nav-link,
     body.sidebar-collapsed .sb-footer-nav .sb-nav-link {
-        justify-content: center; padding: 10px 0; gap: 0;
+        justify-content: center;
+        padding: 10px 0;
+        gap: 0;
     }
 
-    body.sidebar-collapsed .sb-nav > ul > li > .sb-nav-link .sb-nav-icon,
-    body.sidebar-collapsed .sb-footer-nav .sb-nav-link .sb-nav-icon {
-        font-size: 18px; width: 22px; min-width: 22px;
-    }
+        body.sidebar-collapsed .sb-nav > ul > li > .sb-nav-link .sb-nav-icon,
+        body.sidebar-collapsed .sb-footer-nav .sb-nav-link .sb-nav-icon {
+            font-size: 18px;
+            width: 22px;
+            min-width: 22px;
+        }
 
-    /* Submenu */
+    /* ══════════════════════════════════════════
+               NORMAL ACCORDION SUBMENU (expanded sidebar)
+            ══════════════════════════════════════════ */
     .sb-submenu {
-        list-style: none; margin: 0; padding: 3px 0;
+        list-style: none;
+        margin: 0;
+        padding: 3px 0;
         background: var(--sb-bg-deep);
         border-left: 2px solid rgba(255,255,255,0.08);
         margin-left: 28px;
         overflow: hidden;
     }
 
-    .sb-submenu .sb-nav-link {
-        padding: 8px 14px 8px 10px;
-        font-size: 0.845rem; opacity: 0.9; gap: 9px;
+        .sb-submenu .sb-nav-link {
+            padding: 8px 14px 8px 10px;
+            font-size: 0.845rem;
+            opacity: 0.9;
+            gap: 9px;
+        }
+
+            .sb-submenu .sb-nav-link:hover {
+                opacity: 1;
+                color: #fff;
+            }
+
+            .sb-submenu .sb-nav-link.active {
+                opacity: 1;
+                background: rgba(255,255,255,0.09);
+            }
+
+                .sb-submenu .sb-nav-link.active::before {
+                    display: none;
+                }
+
+        .sb-submenu .sb-nav-icon {
+            width: 18px !important;
+            min-width: 18px !important;
+            font-size: 13px !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            flex-shrink: 0 !important;
+            color: var(--sb-text);
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .sb-submenu .sb-nav-link:hover .sb-nav-icon,
+        .sb-submenu .sb-nav-link.active .sb-nav-icon {
+            color: var(--sb-active-line);
+        }
+
+        .sb-submenu .sb-nav-label {
+            font-size: 0.835rem;
+            font-weight: 400;
+            opacity: 1 !important;
+            max-width: 200px !important;
+        }
+
+        .sb-submenu .sb-nav-link.active .sb-nav-label {
+            font-weight: 600;
+        }
+
+    /* ══════════════════════════════════════════
+               FLYOUT SUBMENU (collapsed sidebar)
+               Appears when hovering over a parent item
+            ══════════════════════════════════════════ */
+
+    /* The parent <li> that has a submenu needs position:relative */
+    body.sidebar-collapsed .sb-nav > ul > li.has-submenu {
+        position: relative;
     }
 
-    .sb-submenu .sb-nav-link:hover  { opacity: 1; color: #fff; }
-    .sb-submenu .sb-nav-link.active { opacity: 1; background: rgba(255,255,255,0.09); }
-    .sb-submenu .sb-nav-link.active::before { display: none; }
-
-    .sb-submenu .sb-nav-link .sb-nav-icon {
-        width: 18px !important; min-width: 18px !important;
-        font-size: 13px !important;
-        opacity: 1 !important; visibility: visible !important;
-        overflow: visible !important; flex-shrink: 0 !important;
-        color: var(--sb-text);
-        display: flex !important;
-        align-items: center !important; justify-content: center !important;
+    /* Hide accordion submenus when collapsed */
+    body.sidebar-collapsed .sb-submenu {
+        display: none !important;
     }
 
-    .sb-submenu .sb-nav-link:hover  .sb-nav-icon,
-    .sb-submenu .sb-nav-link.active .sb-nav-icon {
-        color: var(--sb-active-line); opacity: 1 !important;
+    /* Flyout panel — hidden by default */
+    .sb-flyout {
+        display: none;
+        position: fixed; /* fixed so it clears the sidebar overflow */
+        left: var(--sidebar-w-collapsed);
+        background: #1e2d42;
+        border-radius: 0 10px 10px 0;
+        box-shadow: 6px 4px 24px rgba(0,0,0,0.45);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-left: none;
+        min-width: 210px;
+        padding: 6px 0;
+        z-index: 9998;
+        pointer-events: auto;
     }
 
-    .sb-submenu .sb-nav-link .sb-nav-label {
-        font-size: 0.835rem; font-weight: 400;
-        opacity: 1 !important; max-width: 200px !important; overflow: hidden;
+    /* Flyout header (parent menu name) */
+    .sb-flyout-header {
+        padding: 8px 16px 6px;
+        font-family: 'Sora', sans-serif;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #90c4e8;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        margin-bottom: 4px;
     }
 
-    .sb-submenu .sb-nav-link.active .sb-nav-label { font-weight: 600; }
-
-    /* Tooltips — show on ALL top-level items when collapsed */
-    body.sidebar-collapsed [data-ptc-tooltip] { position: relative; }
-
-    body.sidebar-collapsed [data-ptc-tooltip]:hover::after {
-        content: attr(data-ptc-tooltip);
-        position: absolute;
-        left: calc(var(--sidebar-w-collapsed) + 12px);
-        top: 50%; transform: translateY(-50%);
-        background: #1a2535; color: #f0f6ff;
-        padding: 6px 14px; border-radius: 8px;
-        font-size: 0.78rem; white-space: nowrap;
-        z-index: 9999; pointer-events: none;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    /* Flyout items */
+    .sb-flyout-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 16px;
+        color: #c8ddf0;
+        text-decoration: none;
         font-family: 'DM Sans', sans-serif;
-        font-weight: 500; letter-spacing: 0.01em;
-        border: 1px solid rgba(255,255,255,0.1);
+        font-size: 0.855rem;
+        font-weight: 500;
+        transition: background 0.15s, color 0.15s;
+        white-space: nowrap;
+        cursor: pointer;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
     }
 
-    body.sidebar-collapsed [data-ptc-tooltip]:hover::before {
-        content: '';
-        position: absolute;
-        left: calc(var(--sidebar-w-collapsed) + 5px);
-        top: 50%; transform: translateY(-50%);
-        border: 6px solid transparent;
-        border-right-color: #1a2535;
-        z-index: 9999; pointer-events: none;
+        .sb-flyout-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+        }
+
+        .sb-flyout-item.active {
+            color: var(--sb-active-line);
+            background: rgba(126,200,240,0.12);
+        }
+
+        .sb-flyout-item i {
+            font-size: 14px;
+            width: 18px;
+            text-align: center;
+            color: #7aadd4;
+            flex-shrink: 0;
+        }
+
+        .sb-flyout-item:hover i,
+        .sb-flyout-item.active i {
+            color: var(--sb-active-line);
+        }
+
+    /* Show flyout on hover over collapsed parent */
+    body.sidebar-collapsed .sb-nav > ul > li.has-submenu:hover .sb-flyout,
+    .sb-flyout:hover {
+        display: block;
     }
 
+    /* ══════════════════════════════════════════
+               SIMPLE TOOLTIP (for non-submenu items)
+               Only shown when sidebar is collapsed
+            ══════════════════════════════════════════ */
+    body.sidebar-collapsed .sb-nav > ul > li:not(.has-submenu) [data-ptc-tooltip],
+    body.sidebar-collapsed .sb-footer-nav [data-ptc-tooltip] {
+        position: relative;
+    }
+
+        body.sidebar-collapsed .sb-nav > ul > li:not(.has-submenu) [data-ptc-tooltip]:hover::after,
+        body.sidebar-collapsed .sb-footer-nav [data-ptc-tooltip]:hover::after {
+            content: attr(data-ptc-tooltip);
+            position: fixed;
+            left: calc(var(--sidebar-w-collapsed) + 12px);
+            background: #1a2535;
+            color: #f0f6ff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            z-index: 9999;
+            pointer-events: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.1);
+            transform: translateY(-50%);
+            top: auto;
+            margin-top: -10px;
+        }
+
+        body.sidebar-collapsed .sb-nav > ul > li:not(.has-submenu) [data-ptc-tooltip]:hover::before,
+        body.sidebar-collapsed .sb-footer-nav [data-ptc-tooltip]:hover::before {
+            content: '';
+            position: fixed;
+            left: calc(var(--sidebar-w-collapsed) + 5px);
+            border: 6px solid transparent;
+            border-right-color: #1a2535;
+            z-index: 9999;
+            pointer-events: none;
+            margin-top: -6px;
+        }
+
+    /* ── Sidebar footer ─────────────────────── */
     .sb-footer-nav {
         padding: 8px 0 6px;
         border-top: 1px solid var(--sb-border);
         flex-shrink: 0;
     }
 
+    /* ══════════════════════════════════════════
+               MOBILE
+            ══════════════════════════════════════════ */
     @@media (max-width: 768px) {
         #sidebar {
             width: var(--sidebar-w) !important;
@@ -235,35 +483,50 @@
             transition: transform var(--transition);
             z-index: 1050;
             box-shadow: 4px 0 24px rgba(0,0,0,0.4);
+            overflow: hidden;
         }
 
-        body.mobile-open #sidebar { transform: translateX(0); }
+        body.mobile-open #sidebar {
+            transform: translateX(0);
+        }
 
         body.mobile-open .sb-brand-text,
         body.mobile-open .sb-nav-label,
         body.mobile-open .sb-badge,
         body.mobile-open .sb-chevron,
         body.mobile-open .sb-section-title {
-            opacity: 1 !important; max-width: 200px !important; overflow: visible !important;
+            opacity: 1 !important;
+            max-width: 200px !important;
+            overflow: visible !important;
         }
 
         body.mobile-open .sb-nav > ul > li > .sb-nav-link,
         body.mobile-open .sb-footer-nav .sb-nav-link {
             justify-content: flex-start !important;
-            padding: 10px 17px !important; gap: 11px !important;
+            padding: 10px 17px !important;
+            gap: 11px !important;
         }
 
-        body.mobile-open .sb-nav > ul > li > .sb-nav-link .sb-nav-icon,
-        body.mobile-open .sb-footer-nav .sb-nav-link .sb-nav-icon {
-            font-size: 15px !important; width: 22px !important; min-width: 22px !important;
+            body.mobile-open .sb-nav > ul > li > .sb-nav-link .sb-nav-icon,
+            body.mobile-open .sb-footer-nav .sb-nav-link .sb-nav-icon {
+                font-size: 15px !important;
+                width: 22px !important;
+                min-width: 22px !important;
+            }
+
+        body.mobile-open .sb-submenu {
+            display: block !important;
         }
 
-        body.mobile-open .sb-submenu { display: block !important; }
+        body.mobile-open .sb-flyout {
+            display: none !important;
+        }
     }
 </style>
 
 <nav id="sidebar">
 
+    @* ── Brand ── *@
     <a class="sb-brand" href="/Home/Index">
         <div class="sb-brand-icon"><i class="bi bi-truck"></i></div>
         <div class="sb-brand-text">
@@ -275,6 +538,7 @@
     <div class="sb-nav">
         <ul>
 
+            @* ════ MAIN ════ *@
             <li class="sb-section-title">Main</li>
             <li>
                 <a class="sb-nav-link" href="/Home/Index" data-ptc-tooltip="Dashboard">
@@ -283,9 +547,11 @@
                 </a>
             </li>
 
+            @* ════ DATA MANAGEMENT ════ *@
             <li class="sb-section-title">Data Management</li>
 
-            <li>
+            @* Sync Data — with flyout *@
+            <li class="has-submenu">
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuSyncData" aria-expanded="false"
                         data-ptc-tooltip="Sync Data">
@@ -306,17 +572,21 @@
                             <span class="sb-nav-label">Sync History</span>
                         </a>
                     </li>
-                    <li>
-                        <a class="sb-nav-link" asp-controller="Home"
-                           asp-action="Grid" data-ptc-tooltip="Kendo UI Grid Demo">
-                            <span class="sb-nav-icon"><i class="bi bi-grid-3x3"></i></span>
-                            <span class="sb-nav-label">Kendo UI Grid Demo</span>
-                        </a>
-                    </li>
                 </ul>
+                @* Flyout for collapsed state *@
+                <div class="sb-flyout">
+                    <div class="sb-flyout-header">Sync Data</div>
+                    <a class="sb-flyout-item" href="#">
+                        <i class="bi bi-cloud-download"></i> Import Trip Data
+                    </a>
+                    <a class="sb-flyout-item" href="#">
+                        <i class="bi bi-clock-history"></i> Sync History
+                    </a>
+                </div>
             </li>
 
-            <li>
+            @* Payroll — with flyout *@
+            <li class="has-submenu">
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuPayroll" aria-expanded="false"
                         data-ptc-tooltip="Payroll Processing">
@@ -326,24 +596,36 @@
                 </button>
                 <ul class="collapse sb-submenu" id="menuPayroll">
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Salary Adjustments">
+                        <a class="sb-nav-link" asp-controller="IGH" asp-action="SalaryAdjustment"
+                           data-ptc-tooltip="Salary Adjustments">
                             <span class="sb-nav-icon"><i class="bi bi-currency-dollar"></i></span>
                             <span class="sb-nav-label">Salary Adjustments</span>
                         </a>
                     </li>
                     <li>
                         <a class="sb-nav-link"
-                           asp-controller="IGH"
-                           asp-action="LeaveTransaction"
+                           asp-controller="IGH" asp-action="LeaveTransaction"
                            data-ptc-tooltip="Leave Transaction">
                             <span class="sb-nav-icon"><i class="bi bi-calendar-x"></i></span>
                             <span class="sb-nav-label">Leave Transaction</span>
                         </a>
                     </li>
-
                 </ul>
+                @* Flyout *@
+                <div class="sb-flyout">
+                    <div class="sb-flyout-header">Payroll</div>
+                    <a class="sb-flyout-item"
+                       asp-controller="IGH" asp-action="SalaryAdjustment">
+                        <i class="bi bi-currency-dollar"></i> Salary Adjustments
+                    </a>
+                    <a class="sb-flyout-item"
+                       asp-controller="IGH" asp-action="LeaveTransaction">
+                        <i class="bi bi-calendar-x"></i> Leave Transaction
+                    </a>
+                </div>
             </li>
 
+            @* Vehicle — no submenu *@
             <li>
                 <a class="sb-nav-link" href="#" data-ptc-tooltip="Vehicle">
                     <span class="sb-nav-icon"><i class="bi bi-clipboard2-check"></i></span>
@@ -352,7 +634,8 @@
                 </a>
             </li>
 
-            <li>
+            @* Driver Management — with flyout *@
+            <li class="has-submenu">
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuDriver" aria-expanded="false"
                         data-ptc-tooltip="Driver Management">
@@ -362,11 +645,14 @@
                 </button>
                 <ul class="collapse sb-submenu" id="menuDriver">
                     <li>
-                        <a class="sb-nav-link" href="#" data-ptc-tooltip="Driver List">
+                        <a class="sb-nav-link" asp-controller="Master" asp-action="DriverMaster" data-ptc-tooltip="Driver List">
                             <span class="sb-nav-icon"><i class="bi bi-people"></i></span>
                             <span class="sb-nav-label">Driver List</span>
                         </a>
                     </li>
+
+
+
                     <li>
                         <a class="sb-nav-link" href="#" data-ptc-tooltip="Driver Attendance">
                             <span class="sb-nav-icon"><i class="bi bi-card-checklist"></i></span>
@@ -374,10 +660,22 @@
                         </a>
                     </li>
                 </ul>
+                @* Flyout *@
+                <div class="sb-flyout">
+                    <div class="sb-flyout-header">Driver Management</div>
+                    <a class="sb-flyout-item" href="#">
+                        <i class="bi bi-people"></i> Driver List
+                    </a>
+                    <a class="sb-flyout-item" href="#">
+                        <i class="bi bi-card-checklist"></i> Driver Attendance
+                    </a>
+                </div>
             </li>
 
+            @* ════ REPORTS ════ *@
             <li class="sb-section-title">Reports</li>
-            <li>
+
+            <li class="has-submenu">
                 <button class="sb-nav-link" data-bs-toggle="collapse"
                         data-bs-target="#menuReports" aria-expanded="false"
                         data-ptc-tooltip="Reports">
@@ -411,14 +709,33 @@
                         </a>
                     </li>
                 </ul>
+                @* Flyout *@
+                <div class="sb-flyout">
+                    <div class="sb-flyout-header">Reports</div>
+                    <a class="sb-flyout-item" href="#">
+                        <i class="bi bi-calendar-day"></i> Daily Summary
+                    </a>
+                    <a class="sb-flyout-item" href="#">
+                        <i class="bi bi-calendar-month"></i> Monthly Report
+                    </a>
+                    <a class="sb-flyout-item" href="#">
+                        <i class="bi bi-activity"></i> Gate Activity
+                    </a>
+                    <a class="sb-flyout-item" href="#">
+                        <i class="bi bi-download"></i> Export Reports
+                    </a>
+                </div>
             </li>
 
+            @* Settings — no submenu *@
             <li>
                 <a class="sb-nav-link" href="#" data-ptc-tooltip="Settings">
                     <span class="sb-nav-icon"><i class="bi bi-gear"></i></span>
                     <span class="sb-nav-label">Settings</span>
                 </a>
             </li>
+
+            @* Audit Log — no submenu *@
             <li>
                 <a class="sb-nav-link" href="#" data-ptc-tooltip="Audit Log">
                     <span class="sb-nav-icon"><i class="bi bi-journal-text"></i></span>
@@ -429,6 +746,7 @@
         </ul>
     </div>
 
+    @* ── Sign Out ── *@
     <div class="sb-footer-nav">
         <button class="sb-nav-link" data-ptc-tooltip="Sign Out" id="btnSidebarSignOut">
             <span class="sb-nav-icon"><i class="bi bi-box-arrow-left"></i></span>
@@ -439,86 +757,88 @@
 </nav>
 
 <script>
-(function () {
-    document.addEventListener('DOMContentLoaded', function () {
+    (function () {
+        document.addEventListener('DOMContentLoaded', function () {
 
-        var body     = document.body;
-        var submenus = document.querySelectorAll('.sb-submenu');
+            var body     = document.body;
+            var submenus = document.querySelectorAll('.sb-submenu');
 
-       
-        var openSubmenuIds = [];   /* stores IDs of open submenus */
+            /* ── Track open submenus so we can restore them ── */
+            var openSubmenuIds = [];
 
-        function hideAllSubmenus() {
-           
-            openSubmenuIds = [];
-            submenus.forEach(function (sm) {
-                if (sm.classList.contains('show')) {
-                    openSubmenuIds.push(sm.id);   /* remember this was open */
-                }
-              
-                sm.classList.remove('show');
-                sm.style.display  = 'none';
-                sm.style.height   = '';
-                sm.style.overflow = 'hidden';
-
-           
-                var btn = document.querySelector('[data-bs-target="#' + sm.id + '"]');
-                if (btn) { btn.setAttribute('aria-expanded', 'false'); }
-            });
-        }
-
-        function restoreSubmenus() {
-            submenus.forEach(function (sm) {
-             
-                sm.style.display  = '';
-                sm.style.height   = '';
-                sm.style.overflow = '';
-
-                 if (openSubmenuIds.indexOf(sm.id) !== -1) {
-                    sm.classList.add('show');
-                    /* Restore toggle button state */
+            function hideAllSubmenus() {
+                openSubmenuIds = [];
+                submenus.forEach(function (sm) {
+                    if (sm.classList.contains('show')) {
+                        openSubmenuIds.push(sm.id);
+                    }
+                    sm.classList.remove('show');
                     var btn = document.querySelector('[data-bs-target="#' + sm.id + '"]');
-                    if (btn) { btn.setAttribute('aria-expanded', 'true'); }
+                    if (btn) btn.setAttribute('aria-expanded', 'false');
+                });
+            }
+
+            function restoreSubmenus() {
+                submenus.forEach(function (sm) {
+                    if (openSubmenuIds.indexOf(sm.id) !== -1) {
+                        sm.classList.add('show');
+                        var btn = document.querySelector('[data-bs-target="#' + sm.id + '"]');
+                        if (btn) btn.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            }
+
+            /* ── Position flyout vertically when shown ── */
+            function positionFlyouts() {
+                document.querySelectorAll('.has-submenu').forEach(function (li) {
+                    var flyout = li.querySelector('.sb-flyout');
+                    if (!flyout) return;
+
+                    li.addEventListener('mouseenter', function () {
+                        if (!body.classList.contains('sidebar-collapsed')) return;
+                        var rect = li.getBoundingClientRect();
+                        flyout.style.top = rect.top + 'px';
+                    });
+                });
+            }
+
+            positionFlyouts();
+
+            /* ── Watch sidebar collapse/expand ── */
+            var wasCollapsed = body.classList.contains('sidebar-collapsed');
+
+            var observer = new MutationObserver(function () {
+                var isCollapsed = body.classList.contains('sidebar-collapsed');
+
+                if (isCollapsed && !wasCollapsed) {
+                    hideAllSubmenus();
                 }
+
+                if (!isCollapsed && wasCollapsed) {
+                    restoreSubmenus();
+                }
+
+                wasCollapsed = isCollapsed;
             });
-        }
 
-        var wasCollapsed = body.classList.contains('sidebar-collapsed');
+            observer.observe(body, { attributes: true, attributeFilter: ['class'] });
 
-        var observer = new MutationObserver(function () {
-            var isCollapsed = body.classList.contains('sidebar-collapsed');
-
-            if (isCollapsed && !wasCollapsed) {
-                 hideAllSubmenus();
+            if (body.classList.contains('sidebar-collapsed')) {
+                hideAllSubmenus();
             }
 
-            if (!isCollapsed && wasCollapsed) {
-             
-                restoreSubmenus();
+            /* ── Sign Out button ── */
+            var signOutBtn = document.getElementById('btnSidebarSignOut');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', function () {
+                    KSwal.confirm(
+                        'Sign Out?',
+                        'You will be signed out of the PTC IGH System.',
+                        function () { document.getElementById('logoutForm').submit(); }
+                    );
+                });
             }
 
-            wasCollapsed = isCollapsed;
         });
-
-        observer.observe(body, { attributes: true, attributeFilter: ['class'] });
-
-       
-        if (body.classList.contains('sidebar-collapsed')) {
-            hideAllSubmenus();
-        }
-
-      
-        var signOutBtn = document.getElementById('btnSidebarSignOut');
-        if (signOutBtn) {
-            signOutBtn.addEventListener('click', function () {
-                KSwal.confirm(
-                    'Sign Out?',
-                    'You will be signed out of the PTC IGH System.',
-                    function () { document.getElementById('logoutForm').submit(); }
-                );
-            });
-        }
-
-    });
-}());
+    }());
 </script>

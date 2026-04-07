@@ -151,5 +151,15 @@ wwwroot\lib\jquery\dist\jquery.min.js
 wwwroot\lib\jquery\dist\jquery.min.map
 wwwroot\lib\jquery\LICENSE.txt
 wwwroot\lib\kendo\2019.1.220\kendo.all.min.js
+wwwroot\lib\kendo\2019.1.220\styles\Default\loading-image.gif
+wwwroot\lib\kendo\2019.1.220\styles\fonts\glyphs\KendoUIGlyphs.eot
+wwwroot\lib\kendo\2019.1.220\styles\fonts\glyphs\KendoUIGlyphs.svg
+wwwroot\lib\kendo\2019.1.220\styles\fonts\glyphs\KendoUIGlyphs.ttf
+wwwroot\lib\kendo\2019.1.220\styles\fonts\glyphs\KendoUIGlyphs.woff
+wwwroot\lib\kendo\2019.1.220\styles\fonts\glyphs\WebComponentsIcons.eot
+wwwroot\lib\kendo\2019.1.220\styles\fonts\glyphs\WebComponentsIcons.svg
+wwwroot\lib\kendo\2019.1.220\styles\fonts\glyphs\WebComponentsIcons.ttf
+wwwroot\lib\kendo\2019.1.220\styles\fonts\glyphs\WebComponentsIcons.woff
+wwwroot\lib\kendo\2019.1.220\styles\fonts\glyphs\WebComponentsIcons.woff2
 wwwroot\lib\kendo\2019.1.220\styles\kendo.common.min.css
 wwwroot\lib\kendo\2019.1.220\styles\kendo.default.min.css

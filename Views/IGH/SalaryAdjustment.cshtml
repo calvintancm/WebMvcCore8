@@ -1,14 +1,67 @@
-﻿@* ═══════════════════════════════════════════════════════
-   SalaryAdjustment — Pure JavaScript Kendo Grid
-   No tag helpers. Matches LeaveTransaction pattern.
-═══════════════════════════════════════════════════════ *@
+﻿@{
+    ViewData["Title"] = "Salary Adjustment";
+    ViewData["BreadcrumbSection"] = "IGH Management";
+    ViewData["BreadcrumbPage"] = "Salary Adjustment";
+}
 
-@* ── Salary Adjustment Grid Card ── *@
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Salary Adjustment</h1>
+        <p class="page-subtitle">Driver Salary Adjustments (Bonus, Deduction, Overtime, etc.)</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-ptc-primary" onclick="openAddSalaryModal()">
+            <i class="bi bi-plus-lg"></i> Add Adjustment
+        </button>
+        <button class="btn-ptc-outline" onclick="exportSalaryGrid()">
+            <i class="bi bi-download"></i> Export
+        </button>
+    </div>
+</div>
+
+@* ── Filter Card (same style as LeaveTransaction) ── *@
+<div class="ptc-card mb-3">
+    <div class="ptc-card-body" style="padding:16px 20px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;">
+
+            <div style="display:flex;flex-direction:column;gap:5px;min-width:160px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Month</label>
+                <select id="querySalaryMonth" style="width:160px;"></select>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:5px;min-width:120px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Year</label>
+                <select id="querySalaryYear" style="width:120px;"></select>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:200px;">
+                <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:0.06em;">Driver Name</label>
+                <input type="text" id="querySalaryDriverName"
+                       class="k-textbox"
+                       style="width:100%;max-width:280px;"
+                       placeholder="Search driver name..." />
+            </div>
+
+            <div style="display:flex;gap:8px;padding-bottom:1px;">
+                <button class="btn-ptc-primary" onclick="refreshSalaryGrid()">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <button class="btn-ptc-outline" onclick="clearSalaryFilters()">
+                    <i class="bi bi-x-circle"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── Grid Card ── *@
 <div class="ptc-card">
     <div class="ptc-card-header">
         <h2 class="ptc-card-title">
-            <i class="bi bi-currency-exchange"></i>
-            Salary Adjustment Records
+            <i class="bi bi-currency-exchange"></i> Salary Adjustment Records
         </h2>
         <span id="salaryRecordCount"
               style="font-size:0.75rem;color:var(--text-muted);background:#f1f5f9;
@@ -22,30 +75,73 @@
 @section Scripts {
     <script>
         $(function () {
-
             kendo.culture('en-GB');
 
-            // ══════════════════════════════════════════
-            //  KENDO GRID — Salary Adjustment
-            // ══════════════════════════════════════════
-            $('#salary_adjustment_grid').kendoGrid({
+            /* ── Month DropDownList (same as Leave) ── */
+            $('#querySalaryMonth').kendoDropDownList({
+                dataTextField:  'text',
+                dataValueField: 'value',
+                dataSource: [
+                    { text: 'Jan', value: 1  }, { text: 'Feb', value: 2  },
+                    { text: 'Mar', value: 3  }, { text: 'Apr', value: 4  },
+                    { text: 'May', value: 5  }, { text: 'Jun', value: 6  },
+                    { text: 'Jul', value: 7  }, { text: 'Aug', value: 8  },
+                    { text: 'Sep', value: 9  }, { text: 'Oct', value: 10 },
+                    { text: 'Nov', value: 11 }, { text: 'Dec', value: 12 }
+                ],
+                optionLabel: 'All Months',
+                value: new Date().getMonth() + 1
+            });
 
+            /* ── Year DropDownList ── */
+            var cy = new Date().getFullYear();
+            var yrs = [];
+            for (var y = cy - 2; y <= cy + 1; y++) {
+                yrs.push({ text: String(y), value: y });
+            }
+            $('#querySalaryYear').kendoDropDownList({
+                dataTextField:  'text',
+                dataValueField: 'value',
+                dataSource:     yrs,
+                value:          cy
+            });
+
+            /* ── Enter key search ── */
+            $('#querySalaryDriverName').on('keypress', function (e) {
+                if (e.which === 13) refreshSalaryGrid();
+            });
+
+            /* ══════════════════════════════════════════════════════════
+               KENDO GRID (exact pattern as LeaveTransaction)
+               - NO type: 'aspnetmvc-ajax'
+               - POST with default form-urlencoded
+               - parameterMap merges Kendo paging/sort + custom filters
+            ══════════════════════════════════════════════════════════ */
+            $('#salary_adjustment_grid').kendoGrid({
                 dataSource: {
-                    type: 'json',
                     transport: {
                         read: {
-                            url:         '@Url.Action("SalaryAdjustmentRead", "IGH")',
-                            type:        'POST',
-                            contentType: 'application/json',
-                            data:        additionalSalaryInfos    // ← filter function (define below)
+                            url:  '@Url.Action("SalaryAdjustmentRead", "IGH")',
+                            type: 'POST'
                         },
                         update: {
-                            url:         '@Url.Action("SalaryAdjustmentUpdate", "IGH")',
-                            type:        'POST',
-                            contentType: 'application/json'
+                            url:  '@Url.Action("SalaryAdjustmentUpdate", "IGH")',
+                            type: 'POST'
+                        },
+                        create: {
+                            url:  '@Url.Action("SalaryAdjustmentCreate", "IGH")',
+                            type: 'POST'
+                        },
+                        destroy: {
+                            url:  '@Url.Action("SalaryAdjustmentDestroy", "IGH")',
+                            type: 'POST'
                         },
                         parameterMap: function (data, operation) {
-                            return JSON.stringify(data);
+                            if (operation === 'read') {
+                                // Merge Kendo paging/sort fields with custom filters
+                                return $.extend({}, data, getSalaryFilters());
+                            }
+                            return data;
                         }
                     },
                     schema: {
@@ -56,6 +152,7 @@
                             id: 'Id',
                             fields: {
                                 Id:               { type: 'number', editable: false },
+                                DriverId:         { type: 'number', editable: false },
                                 DriverName:       { type: 'string', editable: false },
                                 AdjustmentDate:   { type: 'date'   },
                                 AdjustmentMonth:  { type: 'number', editable: false },
@@ -66,144 +163,102 @@
                             }
                         }
                     },
-                    pageSize:      100,
-                    serverPaging:  true,
-                    serverSorting: true,
-                    sort: { field: 'DriverName', dir: 'asc' },
-
+                    pageSize:       100,
+                    serverPaging:   true,
+                    serverSorting:  true,
+                    sort:           { field: 'DriverName', dir: 'asc' },
                     requestEnd: function (e) {
                         if (e.type === 'read' && e.response) {
                             var total = e.response.Total || 0;
                             $('#salaryRecordCount').text(total + ' record' + (total !== 1 ? 's' : ''));
                         }
                     },
-
-                    error: function (e) {
-                        salaryGridErrorHandler(e);
-                    }
+                    error: function (e) { handleSalaryGridError(e); }
                 },
 
                 columns: [
                     { field: 'Id', hidden: true },
-
+                    { field: 'DriverId', hidden: true },
                     {
                         field: 'DriverName', title: 'Driver Name', width: 220,
                         template: '<span style="font-weight:600;">#: DriverName #</span>'
                     },
-
                     {
-                        field: 'AdjustmentDate', title: 'Adjustment Date', width: 150,
-                        format: '{0:dd-MMM-yyyy}',
+                        field: 'AdjustmentDate', title: 'Adjustment Date', width: 130,
                         template: function (d) {
                             if (!d.AdjustmentDate) return '';
-                            var dt = kendo.parseDate(d.AdjustmentDate);
-                            return '<span style="font-family:\'Sora\',sans-serif;font-size:0.8rem;">'
-                                 + kendo.toString(dt, 'dd-MMM-yyyy') + '</span>';
+                            return '<span style="font-family:Sora,sans-serif;font-size:0.8rem;">'
+                                 + kendo.toString(kendo.parseDate(d.AdjustmentDate), 'dd-MMM-yyyy')
+                                 + '</span>';
                         }
                     },
-
                     {
-                        // Replaces: client-template="#= kendo.toString(new Date(2000, AdjustmentMonth-1,1),'MMM') #"
-                        field: 'AdjustmentMonth', title: 'Month', width: 100,
+                        field: 'AdjustmentMonth', title: 'Month', width: 90,
                         template: function (d) {
-                            if (!d.AdjustmentMonth) return '';
-                            return kendo.toString(new Date(2000, d.AdjustmentMonth - 1, 1), 'MMM');
+                            var m = ['','Jan','Feb','Mar','Apr','May','Jun',
+                                     'Jul','Aug','Sep','Oct','Nov','Dec'];
+                            return m[d.AdjustmentMonth] || '';
                         },
                         attributes:       { style: 'text-align:center;' },
                         headerAttributes: { style: 'text-align:center;' }
                     },
-
                     {
                         field: 'AdjustmentType', title: 'Adjustment Type', width: 150,
                         template: function (d) {
                             if (!d.AdjustmentType) return '';
-                            // Colour-code common adjustment types
                             var colors = {
-                                'BONUS':     ['#dcfce7', '#15803d'],
-                                'DEDUCTION': ['#fee2e2', '#dc2626'],
-                                'OVERTIME':  ['#dbeafe', '#1d4ed8'],
-                                'ALLOWANCE': ['#fef3c7', '#92400e'],
-                                'PENALTY':   ['#ffe4e6', '#be123c']
+                                'BONUS':     ['#dcfce7','#15803d'],
+                                'DEDUCTION': ['#fee2e2','#dc2626'],
+                                'OVERTIME':  ['#dbeafe','#1d4ed8'],
+                                'ALLOWANCE': ['#fef3c7','#92400e'],
+                                'PENALTY':   ['#ffe4e6','#be123c']
                             };
                             var key = d.AdjustmentType.toUpperCase();
-                            var c   = colors[key] || ['#f1f5f9', '#475569'];
+                            var c = colors[key] || ['#f1f5f9','#475569'];
                             return '<span style="background:' + c[0] + ';color:' + c[1]
                                  + ';font-size:0.7rem;font-weight:700;padding:2px 9px;'
                                  + 'border-radius:20px;">' + d.AdjustmentType + '</span>';
                         }
                     },
-
                     {
                         field: 'AdjustmentAmount', title: 'Amount', width: 130,
-                        format: '{0:N2}',
                         template: function (d) {
                             if (d.AdjustmentAmount == null) return '';
-                            var color = d.AdjustmentAmount >= 0
-                                ? 'var(--clr-success)'
-                                : 'var(--clr-danger)';
-                            return '<span style="font-weight:700;color:' + color + ';'
-                                 + 'font-family:\'Sora\',sans-serif;font-size:0.85rem;">'
+                            var color = d.AdjustmentAmount >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
+                            return '<span style="font-weight:700;color:' + color + ';font-family:\'Sora\',sans-serif;font-size:0.85rem;">'
                                  + kendo.toString(d.AdjustmentAmount, 'N2') + '</span>';
                         },
                         attributes:       { style: 'text-align:right;' },
                         headerAttributes: { style: 'text-align:right;' }
                     },
-
                     {
                         field: 'Remarks', title: 'Remarks', width: 220,
-                        template: '<span style="color:var(--text-secondary);font-size:0.82rem;">'
-                                + '#: Remarks || \'\' #</span>'
+                        template: '<span style="color:var(--text-secondary);font-size:0.82rem;">#: Remarks || \'\' #</span>'
                     },
-
                     {
                         field: 'CreatedAt', title: 'Created At', width: 150,
-                        format: '{0:dd-MMM-yyyy HH:mm}',
                         template: function (d) {
                             if (!d.CreatedAt) return '';
-                            var dt = kendo.parseDate(d.CreatedAt);
                             return '<span style="font-size:0.78rem;color:var(--text-muted);">'
-                                 + kendo.toString(dt, 'dd-MMM-yyyy HH:mm') + '</span>';
+                                 + kendo.toString(kendo.parseDate(d.CreatedAt), 'dd-MMM-yyyy HH:mm')
+                                 + '</span>';
                         }
                     },
-
                     {
-                        command: [
-                            {
-                                name: 'edit',
-                                text: {
-                                    edit:   ' Edit',
-                                    update: ' Save',
-                                    cancel: ' Cancel'
-                                },
-                                iconClass: {
-                                    edit:   'k-icon k-i-edit',
-                                    update: 'k-icon k-i-check',
-                                    cancel: 'k-icon k-i-cancel'
-                                }
-                            }
-                        ],
+                        command: [{
+                            name: 'edit',
+                            text: { edit: ' Edit', update: ' Save', cancel: ' Cancel' }
+                        }],
                         title: 'Action', width: 160
                     }
                 ],
 
-                editable: 'inline',
-
-                pageable: {
-                    pageSize:    100,
-                    pageSizes:   [25, 50, 100],
-                    buttonCount: 5,
-                    info:        true,
-                    messages: {
-                        display:      '{0}-{1} of {2} records',
-                        itemsPerPage: 'per page'
-                    }
-                },
-
+                editable:   'inline',
+                pageable:   { pageSize: 100, pageSizes: [25, 50, 100, 200], buttonCount: 5 },
                 sortable:   true,
                 scrollable: true,
                 height:     520,
 
-                /* Style header to match site theme */
                 dataBound: function () {
                     this.thead.find('th').css({
                         'background':   '#f8fafc',
@@ -219,50 +274,75 @@
                 }
             });
 
+            // Refresh grid when filter dropdowns change
+            $('#querySalaryMonth').data('kendoDropDownList').bind('change', function () {
+                refreshSalaryGrid();
+            });
+            $('#querySalaryYear').data('kendoDropDownList').bind('change', function () {
+                refreshSalaryGrid();
+            });
+
+            // Initial load
+            refreshSalaryGrid();
         });
 
-        // ══════════════════════════════════════════
-        //  FILTER DATA FUNCTION
-        //  Called by dataSource read transport.data
-        //  Define/replace this with your actual filter inputs
-        // ══════════════════════════════════════════
-        function additionalSalaryInfos() {
+        /* ── Get current filter values (matches server [FromForm] params) ── */
+        function getSalaryFilters() {
+            var monthDdl = $('#querySalaryMonth').data('kendoDropDownList');
+            var yearDdl  = $('#querySalaryYear').data('kendoDropDownList');
+            var mVal = monthDdl ? parseInt(monthDdl.value()) : 0;
+            var yVal = yearDdl  ? parseInt(yearDdl.value())  : 0;
+            var name = $('#querySalaryDriverName').val().trim();
             return {
-                adjustmentMonth: $('#querySalaryMonth').data('kendoDropDownList')
-                                     ? $('#querySalaryMonth').data('kendoDropDownList').value() || null
-                                     : null,
-                adjustmentYear:  $('#querySalaryYear').data('kendoDropDownList')
-                                     ? parseInt($('#querySalaryYear').data('kendoDropDownList').value()) || null
-                                     : null,
-                driverName:      $('#querySalaryDriverName').val().trim() || null
+                adjustmentMonth: isNaN(mVal) ? 0 : mVal,
+                adjustmentYear:  isNaN(yVal) ? 0 : yVal,
+                driverName: name
             };
         }
 
-        // ══════════════════════════════════════════
-        //  REFRESH
-        // ══════════════════════════════════════════
         function refreshSalaryGrid() {
             var grid = $('#salary_adjustment_grid').data('kendoGrid');
-            if (grid) {
-                grid.dataSource.page(1);
-                grid.dataSource.read();
-            }
+            if (!grid) return;
+            grid.dataSource.query({
+                page:     1,
+                pageSize: grid.dataSource.pageSize(),
+                sort:     grid.dataSource.sort()
+            });
         }
 
-        // ══════════════════════════════════════════
-        //  ERROR HANDLER
-        // ══════════════════════════════════════════
-        function salaryGridErrorHandler(e) {
+        function clearSalaryFilters() {
+            var monthDdl = $('#querySalaryMonth').data('kendoDropDownList');
+            var yearDdl  = $('#querySalaryYear').data('kendoDropDownList');
+            if (monthDdl) monthDdl.value('');
+            if (yearDdl)  yearDdl.value(new Date().getFullYear());
+            $('#querySalaryDriverName').val('');
+            refreshSalaryGrid();
+        }
+
+        function exportSalaryGrid() {
+            var grid = $('#salary_adjustment_grid').data('kendoGrid');
+            if (grid) { grid.saveAsExcel(); KSwal.toast('info', 'Exporting...'); }
+        }
+
+        function openAddSalaryModal() {
+            KSwal.alert('Add Salary Adjustment form coming soon.', 'Add Adjustment', 'info');
+        }
+
+        function handleSalaryGridError(e) {
             var msg = 'An error occurred loading salary adjustments.';
             if (e.errors) {
                 var parts = [];
-                $.each(e.errors, function (key, val) {
-                    if (val.errors) parts.push(val.errors.join('\n'));
+                $.each(e.errors, function (k, v) {
+                    if (v.errors) parts.push(v.errors.join('\n'));
+                    else if (typeof v === 'string') parts.push(v);
                 });
                 if (parts.length) msg = parts.join('\n');
-            } else if (e.xhr && e.xhr.responseText) {
-                msg = 'Server error. Please try again.';
-                console.error('Salary grid error:', e.xhr.responseText);
+            } else if (e.xhr) {
+                console.error('Salary grid error:', e.xhr.status, e.xhr.responseText);
+                if (e.xhr.status === 401) msg = 'Session expired. Please log in again.';
+                if (e.xhr.status === 403) msg = 'You do not have permission to view this data.';
+                if (e.xhr.status === 404) msg = 'Action not found. Check controller route.';
+                if (e.xhr.status === 500) msg = 'Server error. Check application logs.';
             }
             KSwal.error('Grid Error', msg);
         }
