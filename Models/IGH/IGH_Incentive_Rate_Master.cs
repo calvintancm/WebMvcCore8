@@ -35,22 +35,22 @@ namespace ptc_IGH_Sys.Models.IGH
 
         [StringLength(50)]
         [Column("Trip_Type")]
-        public string TripType { get; set; }
+        public string? TripType { get; set; }
 
         [StringLength(20)]
         [Column("Terminal_Area")]
-        public string TerminalArea { get; set; }
+        public string? TerminalArea { get; set; }
 
         [Column("Trip_Threshold_Min")]
         public int? TripThresholdMin { get; set; }
 
         [StringLength(20)]
         [Column("Assignment_Type")]
-        public string AssignmentType { get; set; }
+        public string? AssignmentType { get; set; }
 
         [Required]
         [Column("Effective_Date")]
-        public DateTime EffectiveDate { get; set; } = DateTime.Now;
+        public DateTime? EffectiveDate { get; set; } = DateTime.Now;
 
        
         [ForeignKey("RateTypeId")]

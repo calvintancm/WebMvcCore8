@@ -14,7 +14,7 @@ namespace ptc_IGH_Sys.ViewModels.IGH
 
         [Required]
         [StringLength(50)]
-        public string JobTitleGroup { get; set; } = string.Empty;
+        public string? JobTitleGroup { get; set; } = string.Empty;
 
         [Required]
         public decimal RateValue { get; set; }
@@ -35,7 +35,7 @@ namespace ptc_IGH_Sys.ViewModels.IGH
         public string? AssignmentType { get; set; } = string.Empty;
 
         [Required]
-        public DateTime EffectiveDate { get; set; } = DateTime.Now;
+        public DateTime? EffectiveDate { get; set; } = DateTime.Now;
 
         // Constructor to ensure defaults
         public IGH_Incentive_Rate_MasterViewModel()

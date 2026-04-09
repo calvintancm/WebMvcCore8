@@ -133,6 +133,24 @@
                     },
                     {
                         field: 'Payment_Frequency', title: 'Payment Frequency', width: 180,
+                        editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: 'text',
+                                    dataValueField: 'value',
+                                    dataSource: [
+                                        { text: 'DAILY', value: 'DAILY' },
+                                        { text: 'MONTHLY', value: 'MONTHLY' },
+                                        { text: 'PER_ASSIGNMENT', value: 'PER_ASSIGNMENT' },
+                                        { text: 'PER_DAY', value: 'PER_DAY' },
+                                        { text: 'PER_DAY_WORKED', value: 'PER_DAY_WORKED' },
+                                        { text: 'PER_TRIP', value: 'PER_TRIP' },
+
+                                    ],
+                                    value: options.model.Payment_Frequency || 'DAILY'
+                                });
+                        },
                         template: function (d) {
                             var freq = d.Payment_Frequency || '';
                             var color = freq === 'Monthly' ? '#dbeafe' : (freq === 'Weekly' ? '#dcfce7' : '#fef3c7');

@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Driver Master";
     ViewData["BreadcrumbSection"] = "Master Data";
     ViewData["BreadcrumbPage"] = "Drivers";
@@ -130,18 +130,18 @@
                             fields: {
                                 Id:               { type: 'number', editable: false },
                                 Name:             { type: 'string', validation: { required: true } },
-                                LicenseNumber:    { type: 'string' },
-                                NRIC:             { type: 'string' },
-                                MobileNumber:     { type: 'string', validation: { required: true } },
-                                Active:           { type: 'boolean' },
-                                Allowance:        { type: 'number', validation: { min: 0 } },
-                                Nationality:      { type: 'string' },
-                                Shift:            { type: 'string' },
-                                JobTitle_Group:   { type: 'string' },
-                                // DepartmentName:   { type: 'string', editable: false },
-                                // PaymentSchemeName:{ type: 'string', editable: false },
-                                CreatedAt:        { type: 'string',   editable: false },
-                                UpdatedAt:        { type: 'string',   editable: false }
+                                LicenseNumber:    { type: 'string', defaultValue: '' },
+                                NRIC:             { type: 'string', defaultValue: '' },
+                                MobileNumber:     { type: 'string', validation: { required: true }, defaultValue: '' },
+                                Active:           { type: 'boolean', defaultValue: false },
+                                Allowance:        { type: 'number', validation: { min: 0 }, defaultValue: 0 },
+                                Nationality:      { type: 'string', defaultValue: '' },
+                                Shift:            { type: 'string', defaultValue: '' },
+                                JobTitle_Group:   { type: 'string', defaultValue: '' },   // null-safe
+                                Department_Id:    { type: 'number', defaultValue: 0 },    // null-safe
+                                PaymentScheme_Id: { type: 'number', defaultValue: 0 },    // null-safe
+                                CreatedAt:        { type: 'string', editable: false, defaultValue: '' },
+                                UpdatedAt:        { type: 'string', editable: false, defaultValue: '' }
                             }
                         }
                     },
@@ -162,11 +162,11 @@
                     { field: 'Id', hidden: true },
                     {
                         field: 'Name', title: 'Driver Name', width: 200,
-                        template: '<span style="font-weight:600;">#: Name #</span>'
+                        template: '<span style="font-weight:600;">#: Name || "N/A" #</span>'
                     },
-                    { field: 'LicenseNumber', title: 'License No', width: 100 },
-                    { field: 'NRIC', title: 'NRIC', width: 100 },
-                    { field: 'MobileNumber', title: 'Mobile', width: 100 },
+                    { field: 'LicenseNumber', title: 'License No', width: 100, template: "#= LicenseNumber || '' #" },
+                    { field: 'NRIC', title: 'NRIC', width: 100, template: "#= NRIC || '' #" },
+                    { field: 'MobileNumber', title: 'Mobile', width: 100, template: "#= MobileNumber || '' #" },
                     {
                         field: 'Active', title: 'Active', width: 80,
                         template: '# if(Active) { # <span class="badge-active">Active</span> # } else { # <span class="badge-inactive">Inactive</span> # } #',
@@ -175,24 +175,65 @@
                     {
                         field: 'Allowance', title: 'Allowance', width: 100,
                         format: '{0:N2}',
-                        attributes: { style: 'text-align:right;' }
+                        attributes: { style: 'text-align:right;' },
+                        template: "#= Allowance != null ? kendo.toString(Allowance, 'n2') : '0.00' #"
                     },
-                    { field: 'Nationality', title: 'Nationality', width: 100 },
-                    { field: 'Shift', title: 'Shift', width: 100 },
-                    { field: 'JobTitle_Group', title: 'Job Group', width: 100 },
-                    // { field: 'DepartmentName', title: 'Department', width: 150 },
-                    // { field: 'PaymentSchemeName', title: 'Payment Scheme', width: 150 },
                     {
-                           field: 'CreatedAt', 
-                           title: 'Created At', 
-                           width: 140,
-                           template: '#: CreatedAt #'
+                        field: 'Nationality', title: 'Nationality', width: 100,
+                        template: "#= Nationality || 'N/A' #",
+                        editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: 'text',
+                                    dataValueField: 'value',
+                                    dataSource: [
+                                        { text: 'Malaysian', value: 'Malaysian' },
+                                        { text: 'Myanmarese', value: 'Myanmarese' },
+                                        { text: 'Singaporean', value: 'Singaporean' },
+                                        { text: 'PRC', value: 'PRC' },
+                                        { text: 'SPR', value: 'SPR' }
+                                    ],
+                                    value: options.model.Nationality || 'Malaysian'
+                                });
+                        }
                     },
-                     {
-                           field: 'UpdatedAt',
-                           title: 'Updated At',
-                           width: 0,
-                           template: '#: UpdatedAt #'
+                    {
+                        field: 'Shift', title: 'Shift', width: 100,
+                        template: "#= Shift || 'N/A' #",
+                        editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: 'text',
+                                    dataValueField: 'value',
+                                    dataSource: [
+                                        { text: 'Day', value: 'Day' },
+                                        { text: 'Night', value: 'Night' }
+                                    ],
+                                    value: options.model.Shift || 'Day'
+                                });
+                        }
+                    },
+                    {
+                        field: 'JobTitle_Group',
+                        title: 'Job Group',
+                        width: 100,
+                        template: "#= JobTitle_Group || 'N/A' #"
+                    },
+                    // { field: 'DepartmentName', title: 'Department', width: 150, template: "#= DepartmentName || '-' #" },
+                    // { field: 'PaymentSchemeName', title: 'Payment Scheme', width: 150, template: "#= PaymentSchemeName || '-' #" },
+                    {
+                        field: 'CreatedAt',
+                        title: 'Created At',
+                        width: 140,
+                        template: "#= CreatedAt || '' #"
+                    },
+                    {
+                        field: 'UpdatedAt',
+                        title: 'Updated At',
+                        width: 140,
+                        template: "#= UpdatedAt || '' #"
                     },
                     {
                         command: [{
@@ -202,7 +243,6 @@
                         title: 'Action', width: 160
                     }
                 ],
-
                 editable:   'inline',
                 pageable:   { pageSize: 10, pageSizes: [10, 20, 50, 100], buttonCount: 5 },
                 sortable:   true,

@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Job Title Rates";
     ViewData["BreadcrumbSection"] = "Master Data";
     ViewData["BreadcrumbPage"] = "Job Title Rates";
@@ -124,8 +124,15 @@
                             if (operation === 'read') {
                                 return $.extend({}, data, getJobRateFilters());
                             }
+
+                            if (data && data.EffectiveDate) {
+                                // Convert JS Date to ISO string
+                                data.EffectiveDate = kendo.toString(data.EffectiveDate, "yyyy-MM-ddTHH:mm:ss");
+                            }
+
                             return data;
                         }
+
                     },
                     schema: {
                         data:   'Data',
@@ -134,13 +141,13 @@
                         model: {
                             id: 'JobRateId',
                             fields: {
-                                JobRateId:          { type: 'number', editable: false },
-                                JobTitleGroup:      { type: 'string', validation: { required: true } },
-                                RateTypeId:         { type: 'number', validation: { required: true } },
-                                RateTypeDescription:{ type: 'string', editable: false },
-                                RateValue:          { type: 'number', validation: { required: true, min: 0 } },
-                                Currency:           { type: 'string', validation: { required: true, maxlength: 3 } },
-                                EffectiveDate:      { type: 'date', validation: { required: true } }
+                                JobRateId:          { type: 'number', editable: false, from: 'JobRateId' },
+                                JobTitleGroup:      { type: 'string', validation: { required: true }, from: 'JobTitleGroup' },
+                                RateTypeId:         { type: 'number', validation: { required: true }, from: 'RateTypeId' },
+                                RateTypeDescription:{ type: 'string', editable: false, from: 'RateTypeDescription' },
+                                RateValue:          { type: 'number', validation: { required: true, min: 0 }, from: 'RateValue' },
+                                Currency:           { type: 'string', validation: { required: true, maxlength: 3 }, from: 'Currency' },
+                                EffectiveDate:      { type: 'date', validation: { required: true }, from: 'EffectiveDate' }
                             }
                         }
                     },
@@ -160,7 +167,21 @@
                 columns: [
                     { field: 'JobRateId', hidden: true },
                     {
-                        field: 'JobTitleGroup', title: 'Job Title Group', width: 200
+                        field: 'JobTitleGroup', title: 'Job Title Group', width: 200,
+                         editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: 'text',
+                                    dataValueField: 'value',
+                                    dataSource: [
+                                        { text: 'All Drivers', value: 'All Drivers' },
+                                        { text: 'Foreign', value: 'Foreign' },
+                                        { text: 'Local / PR', value: 'Local / PR' }
+                                    ],
+                                    value: options.model.JobTitleGroup || 'All Drivers'
+                                });
+                        }
                     },
                     {
                         field: 'RateTypeId', title: 'Rate Type', width: 200,
@@ -234,8 +255,24 @@
                     });
                 },
 
-                save: function () {
-                    KSwal.toast('success', 'Job rate updated.');
+                save: function (e) {
+                    /* Fired AFTER server responds successfully */
+                    KSwal.toast('success', 'Job rate saved.');
+                },
+
+                error: function (e) {
+                    /* Fired when server returns error */
+                    console.error('Grid save error:', e);
+                    if (e.errors) {
+                        var msg = '';
+                        $.each(e.errors, function(k, v) {
+                            if (typeof v === 'string') msg += v + '\n';
+                            else if (v.errors) msg += v.errors.join(', ') + '\n';
+                        });
+                        KSwal.error('Save failed', msg || 'Unknown error');
+                    } else {
+                        KSwal.error('Save failed', 'Check server logs.');
+                    }
                 }
             });
 

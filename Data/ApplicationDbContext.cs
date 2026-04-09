@@ -41,6 +41,23 @@ namespace ptc_IGH_Sys.Data
             builder.Entity<ApplicationUser>().ToTable("AspNetUsers");
 
 
+            //
+            builder.Entity<IGH_JobTitleRate_Master>()
+                .Property(e => e.RateValue)
+                .HasPrecision(18, 2);
+
+            builder.Entity<IGH_Incentive_Rate_Master>()
+                .Property(e => e.RateValue)
+                .HasPrecision(18, 2);
+
+            builder.Entity<IGH_Leave_Transaction>()
+                .Property(e => e.Leave_Count)
+                .HasPrecision(18, 2);
+
+            builder.Entity<IGH_Salary_Adjustment_Transaction>()
+                .Property(e => e.AdjustmentAmount)
+                .HasPrecision(18, 2);
+
             // IMPORTANT: EF Core 8 uses "LockoutEnd" by default
             // but your existing LCL_UAT DB column is "LockoutEndDateUtc"
             // This line maps them correctly to avoid a column mismatch error

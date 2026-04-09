@@ -11,6 +11,7 @@ using ptc_IGH_Sys.ViewModels.Master;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ptc_IGH_Sys.Controllers
 {
@@ -30,7 +31,7 @@ namespace ptc_IGH_Sys.Controllers
         // GET: /Master/DriverMaster
         public IActionResult DriverMaster() => View();
 
-    
+
         [HttpPost]
         public async Task<IActionResult> DriverMasterRead(
             [FromForm] KendoGridRequest kendo,
@@ -43,8 +44,8 @@ namespace ptc_IGH_Sys.Controllers
             try
             {
                 var query = _db.TripDrivers
-                    .Include(x => x.Department)
-                    .Include(x => x.PaymentScheme)
+                    //.Include(x => x.Department)
+                    //.Include(x => x.PaymentScheme)
                     .AsNoTracking()
                     .AsQueryable();
 
@@ -77,12 +78,9 @@ namespace ptc_IGH_Sys.Controllers
                         JobTitle_Group = x.JobTitle_Group ?? string.Empty,
                         //DepartmentName = x.Department != null ? x.Department.Description : string.Empty,
                         //PaymentSchemeName = x.PaymentScheme != null ? x.PaymentScheme.Description : string.Empty,
-                        CreatedAt = x.CreatedAt.HasValue
-                        ? x.CreatedAt.Value.ToString("dd-MMM-yyyy HH:mm")
-                        : string.Empty,
-                        UpdatedAt = x.UpdatedAt.HasValue
-                        ? x.UpdatedAt.Value.ToString("dd-MMM-yyyy HH:mm")
-                        : string.Empty,
+                        CreatedAt = x.CreatedAt ?? DateTime.Now,
+                        UpdatedAt = x.UpdatedAt ?? DateTime.Now
+
                     },
                     defaultSort: "Name"
                 );
@@ -100,89 +98,110 @@ namespace ptc_IGH_Sys.Controllers
            POST: /Master/DriverMasterUpdate
         ════════════════════════════════════════════════════════════ */
         [HttpPost]
-        public async Task<IActionResult> DriverMasterUpdate(
-            [FromForm] TripDriverViewModel viewModel)
+        public async Task<IActionResult> DriverMasterUpdate([FromForm] TripDriverViewModel viewModel)
         {
+            _logger.LogInformation("=== DriverMasterUpdate START ===");
+
             try
             {
-                // DEBUG — print all form values received
-                _logger.LogInformation("=== DriverMasterUpdate FORM VALUES ===");
+                // 1. Log all form values
+                _logger.LogInformation("=== FORM VALUES RECEIVED ===");
                 foreach (var key in Request.Form.Keys)
                 {
                     _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
                 }
 
-                // DEBUG — print viewModel values
-                _logger.LogInformation("=== DriverMasterUpdate VIEWMODEL ===");
-                _logger.LogInformation("Id={Id} Name={Name} Mobile={Mobile} Active={Active} Allowance={Allowance}",
-                    viewModel?.Id, viewModel?.Name, viewModel?.MobileNumber, viewModel?.Active, viewModel?.Allowance);
-                _logger.LogInformation("License={L} NRIC={N} Nationality={Nat} Shift={S} JobTitle={J}",
-                    viewModel?.LicenseNumber, viewModel?.NRIC, viewModel?.Nationality,
-                    viewModel?.Shift, viewModel?.JobTitle_Group);
+                // 2. Log ViewModel values
+                _logger.LogInformation("=== VIEWMODEL VALUES ===");
+                _logger.LogInformation(
+                    "Id={Id}, Name={Name}, Mobile={Mobile}, Active={Active}, Allowance={Allowance}, " +
+                    "License={License}, NRIC={NRIC}, Nationality={Nationality}, Shift={Shift}, JobTitle={JobTitle}",
+                    viewModel.Id, viewModel.Name, viewModel.MobileNumber, viewModel.Active, viewModel.Allowance,
+                    viewModel.LicenseNumber, viewModel.NRIC, viewModel.Nationality, viewModel.Shift, viewModel.JobTitle_Group
+                );
 
+                // 3. Clean ModelState (remove display-only fields)
                 ModelState.Remove(nameof(TripDriverViewModel.DepartmentName));
                 ModelState.Remove(nameof(TripDriverViewModel.PaymentSchemeName));
                 ModelState.Remove(nameof(TripDriverViewModel.CreatedAt));
                 ModelState.Remove(nameof(TripDriverViewModel.UpdatedAt));
-                ModelState.Remove(nameof(TripDriverViewModel.Department_Id));      // add this
-                ModelState.Remove(nameof(TripDriverViewModel.PaymentScheme_Id));   // add this
+                ModelState.Remove(nameof(TripDriverViewModel.Department_Id));
+                ModelState.Remove(nameof(TripDriverViewModel.PaymentScheme_Id));
 
-                // DEBUG — print all ModelState errors
-                _logger.LogInformation("=== MODELSTATE ERRORS ===");
-                foreach (var kvp in ModelState)
-                {
-                    if (kvp.Value.Errors.Any())
-                    {
-                        foreach (var err in kvp.Value.Errors)
-                        {
-                            _logger.LogWarning("ModelState Field={Field} Error={Error} AttemptedValue={Val}",
-                                kvp.Key, err.ErrorMessage, kvp.Value.AttemptedValue);
-                        }
-                    }
-                }
-
-                if (viewModel == null)
-                    return Json(KendoGridResult<TripDriverViewModel>.Error("Invalid request data."));
-
+                // 4. Log ModelState errors
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("=== MODELSTATE ERRORS ===");
                     var errors = ModelState
                         .Where(x => x.Value.Errors.Any())
-                        .ToDictionary(k => k.Key, v => v.Value.Errors.Select(e => e.ErrorMessage).ToArray());
+                        .ToDictionary(
+                            k => k.Key,
+                            v => v.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
 
-                    // DEBUG — return errors visibly
-                    _logger.LogWarning("ModelState invalid, returning errors: {Errors}",
-                        string.Join(", ", errors.Keys));
+                    foreach (var kvp in errors)
+                    {
+                        _logger.LogWarning("Field={Field}, Errors={Errors}", kvp.Key, string.Join("; ", kvp.Value));
+                    }
 
                     return Json(new { Data = new[] { viewModel }, Total = 1, Errors = errors });
                 }
 
+                var debugRecord = await _db.TripDrivers
+                .Where(x => x.Id == viewModel.Id)
+                .Select(x => new { x.Id, x.JobTitle_Group, x.PaymentScheme_Id, x.Department_Id })
+                .FirstOrDefaultAsync();
+
+                _logger.LogInformation("DebugRecord: Id={Id}, JobTitle={Job}, Dept={Dept}, Scheme={Scheme}",
+                    debugRecord?.Id, debugRecord?.JobTitle_Group ?? "<NULL>",
+                    debugRecord?.Department_Id?.ToString() ?? "<NULL>",
+                    debugRecord?.PaymentScheme_Id?.ToString() ?? "<NULL>");
+
+
+                // 5. Lookup record
                 var record = await _db.TripDrivers.FirstOrDefaultAsync(x => x.Id == viewModel.Id);
                 if (record == null)
+                {
+                    _logger.LogWarning("Record #{Id} not found.", viewModel.Id);
                     return Json(KendoGridResult<TripDriverViewModel>.Error($"Record #{viewModel.Id} not found."));
+                }
 
-                // Update editable fields
-                record.Name = viewModel.Name;
+                _logger.LogInformation("=== RECORD BEFORE UPDATE ===");
+                foreach (var prop in record.GetType().GetProperties())
+                {
+                    var val = prop.GetValue(record);
+                    _logger.LogInformation("{Prop} = {Val}", prop.Name, val ?? "<NULL>");
+                }
+
+                // 6. Apply updates safely
+                record.Name = viewModel.Name ?? string.Empty;
                 record.LicenseNumber = viewModel.LicenseNumber;
                 record.NRIC = viewModel.NRIC;
-                record.MobileNumber = viewModel.MobileNumber;
+                record.MobileNumber = viewModel.MobileNumber ?? string.Empty;
                 record.Active = viewModel.Active;
                 record.Allowance = viewModel.Allowance;
-                record.Nationality = viewModel.Nationality;
-                record.Shift = viewModel.Shift;
-                record.JobTitle_Group = viewModel.JobTitle_Group;
+                record.Nationality = viewModel.Nationality ?? string.Empty;
+                record.Shift = viewModel.Shift ?? string.Empty;
+                record.JobTitle_Group = viewModel.JobTitle_Group ?? string.Empty;
 
-                record.Department_Id = 5L;   // always hardcoded, ignore posted value
-                record.PaymentScheme_Id = 10L; // always hardcoded, ignore posted value
-                record.UpdatedAt = DateTime.Now; // always refresh on update
+                // Hardcoded values
+                record.Department_Id = 5L;
+                record.PaymentScheme_Id = 10L;
 
-                // Note: Department and PaymentScheme are not updated here – use separate dropdowns if needed
+                // Audit fields
+                record.CreatedAt = viewModel.CreatedAt ?? DateTime.Now;
+                record.UpdatedAt = DateTime.Now;
 
+                // 7. Save changes
+                _logger.LogInformation("=== SAVING CHANGES ===");
                 await _db.SaveChangesAsync();
 
-                viewModel.UpdatedAt = record.UpdatedAt.Value.ToString("dd-MMM-yyyy HH:mm");
+                // 8. Update ViewModel for return
+                viewModel.UpdatedAt = record.UpdatedAt;
 
-                _logger.LogInformation("Driver #{Id} updated by {User}", viewModel.Id, User.Identity?.Name);
+                _logger.LogInformation("Driver #{Id} updated successfully by {User}", viewModel.Id, User.Identity?.Name);
+                _logger.LogInformation("=== DriverMasterUpdate END ===");
+
                 return Json(new { Data = new[] { viewModel }, Total = 1 });
             }
             catch (Exception ex)
@@ -191,6 +210,7 @@ namespace ptc_IGH_Sys.Controllers
                 return Json(KendoGridResult<TripDriverViewModel>.Error(ex.Message));
             }
         }
+
 
         /* ════════════════════════════════════════════════════════════
            POST: /Master/DriverMasterCreate
@@ -217,19 +237,15 @@ namespace ptc_IGH_Sys.Controllers
                     JobTitle_Group = viewModel.JobTitle_Group,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now
-                   // Department, PaymentScheme can be set later if needed
+                    // Department, PaymentScheme can be set later if needed
                 };
 
                 _db.TripDrivers.Add(newRecord);
                 await _db.SaveChangesAsync();
 
                 viewModel.Id = newRecord.Id;
-                viewModel.CreatedAt = newRecord.CreatedAt.HasValue
-       ? newRecord.CreatedAt.Value.ToString("dd-MMM-yyyy HH:mm")
-       : string.Empty;
-                viewModel.UpdatedAt = newRecord.UpdatedAt.HasValue
-                    ? newRecord.UpdatedAt.Value.ToString("dd-MMM-yyyy HH:mm")
-                    : string.Empty;
+                viewModel.CreatedAt = newRecord.CreatedAt ?? DateTime.Now;
+                viewModel.UpdatedAt = newRecord.UpdatedAt ?? DateTime.Now;
 
                 _logger.LogInformation("Driver created Id={Id} by {User}", newRecord.Id, User.Identity?.Name);
                 return Json(new { Data = new[] { viewModel }, Total = 1 });
@@ -459,6 +475,27 @@ namespace ptc_IGH_Sys.Controllers
                     .AsNoTracking()
                     .AsQueryable();
 
+
+                foreach (var key in Request.Form.Keys)
+                {
+                    _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
+                }
+
+                // DEBUG — print all ModelState errors
+                _logger.LogInformation("=== MODELSTATE ERRORS ===");
+                foreach (var kvp in ModelState)
+                {
+                    if (kvp.Value.Errors.Any())
+                    {
+                        foreach (var err in kvp.Value.Errors)
+                        {
+                            _logger.LogWarning("ModelState Field={Field} Error={Error} AttemptedValue={Val}",
+                                kvp.Key, err.ErrorMessage, kvp.Value.AttemptedValue);
+                        }
+                    }
+                }
+
+
                 if (!string.IsNullOrWhiteSpace(jobTitleGroup))
                 {
                     var term = jobTitleGroup.Trim().ToUpper();
@@ -479,8 +516,8 @@ namespace ptc_IGH_Sys.Controllers
                         RateValue = x.RateValue,
                         Currency = x.Currency,
                         EffectiveDate = x.EffectiveDate
-                    },
-                    defaultSort: "JobTitleGroup"
+                    }
+                    // defaultSort: "JobTitleGroup"
                 );
 
                 return Json(result);
@@ -488,7 +525,9 @@ namespace ptc_IGH_Sys.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "JobTitleRateMasterRead failed");
-                return Json(KendoGridResult<IGH_JobTitleRate_MasterViewModel>.Error(ex.Message));
+                // Return a more descriptive error to the client (only in development)
+                var errorMsg = ex.InnerException?.Message ?? ex.Message;
+                return Json(KendoGridResult<IGH_JobTitleRate_MasterViewModel>.Error(errorMsg));
             }
         }
 
@@ -504,6 +543,26 @@ namespace ptc_IGH_Sys.Controllers
                 if (viewModel == null)
                     return Json(KendoGridResult<IGH_JobTitleRate_MasterViewModel>.Error("Invalid request."));
 
+                foreach (var key in Request.Form.Keys)
+                {
+                    _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
+                }
+
+                // DEBUG — print all ModelState errors
+                _logger.LogInformation("=== MODELSTATE ERRORS ===");
+                foreach (var kvp in ModelState)
+                {
+                    if (kvp.Value.Errors.Any())
+                    {
+                        foreach (var err in kvp.Value.Errors)
+                        {
+                            _logger.LogWarning("ModelState Field={Field} Error={Error} AttemptedValue={Val}",
+                                kvp.Key, err.ErrorMessage, kvp.Value.AttemptedValue);
+                        }
+                    }
+                }
+
+
                 if (!ModelState.IsValid)
                 {
                     var errors = ModelState
@@ -511,6 +570,8 @@ namespace ptc_IGH_Sys.Controllers
                         .ToDictionary(k => k.Key, v => v.Value.Errors.Select(e => e.ErrorMessage).ToArray());
                     return Json(new { Data = new[] { viewModel }, Total = 1, Errors = errors });
                 }
+
+
 
                 var record = await _db.IGH_JobTitleRate_Master
                     .FirstOrDefaultAsync(x => x.JobRateId == viewModel.JobRateId);
@@ -536,8 +597,9 @@ namespace ptc_IGH_Sys.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "JobTitleRateMasterUpdate failed Id={Id}", viewModel?.JobRateId);
-                return Json(KendoGridResult<IGH_JobTitleRate_MasterViewModel>.Error(ex.Message));
+                _logger.LogError(ex, "JobTitleRateMasterRead failed");
+                var errorDetail = ex.InnerException?.Message ?? ex.Message;
+                return Json(KendoGridResult<IGH_JobTitleRate_MasterViewModel>.Error(errorDetail));
             }
         }
 
@@ -705,6 +767,26 @@ namespace ptc_IGH_Sys.Controllers
                 if (viewModel == null)
                     return Json(KendoGridResult<IGH_Incentive_Rate_MasterViewModel>.Error("Invalid request."));
 
+                foreach (var key in Request.Form.Keys)
+                {
+                    _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
+                }
+
+
+                _logger.LogInformation("=== IncentiveRateMaster MODELSTATE ERRORS ===");
+                foreach (var kvp in ModelState)
+                {
+                    if (kvp.Value.Errors.Any())
+                    {
+                        foreach (var err in kvp.Value.Errors)
+                        {
+                            _logger.LogWarning("ModelState Field={Field} Error={Error} AttemptedValue={Val}",
+                                kvp.Key, err.ErrorMessage, kvp.Value.AttemptedValue);
+                        }
+                    }
+                }
+
+
                 if (!ModelState.IsValid)
                 {
                     var errors = ModelState
@@ -728,7 +810,7 @@ namespace ptc_IGH_Sys.Controllers
                 record.TerminalArea = viewModel.TerminalArea ?? "";
                 record.TripThresholdMin = viewModel.TripThresholdMin ?? 0;
                 record.AssignmentType = viewModel.AssignmentType ?? "";
-                record.EffectiveDate = viewModel.EffectiveDate;
+                record.EffectiveDate = viewModel.EffectiveDate ?? DateTime.Now;
 
                 await _db.SaveChangesAsync();
 
@@ -768,9 +850,9 @@ namespace ptc_IGH_Sys.Controllers
                     TerminalArea = viewModel.TerminalArea ?? "",
                     TripThresholdMin = viewModel.TripThresholdMin ?? 0,
                     AssignmentType = viewModel.AssignmentType ?? "",
-                    EffectiveDate = viewModel.EffectiveDate
+                    EffectiveDate = viewModel.EffectiveDate ?? DateTime.Now
 
-               };
+                };
 
                 _db.IGH_Incentive_Rate_Master.Add(newRecord);
                 await _db.SaveChangesAsync();

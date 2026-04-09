@@ -132,6 +132,9 @@
                             if (operation === 'read') {
                                 return $.extend({}, data, getIncentiveFilters());
                             }
+                            if (data && data.EffectiveDate) {
+                                data.EffectiveDate = kendo.toString(data.EffectiveDate, "yyyy-MM-ddTHH:mm:ss");
+                            }
                             return data;
                         }
                     },
@@ -172,10 +175,25 @@
                 columns: [
                     { field: 'IncentiveRateId', hidden: true },
                     {
-                        field: 'JobTitleGroup', title: 'Job Title Group', width: 180
+                        field: 'JobTitleGroup', title: 'Job Title Group', width: 150,
+                         editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: 'text',
+                                    dataValueField: 'value',
+                                    dataSource: [
+                                        { text: 'All Drivers', value: 'All Drivers' },
+                                        { text: 'Foreign', value: 'Foreign' },
+                                        { text: 'Local / PR', value: 'Local / PR' },
+                                        { text: 'Leader - Gunaseelan & Tan Szu Hian', value: 'Leader - Gunaseelan & Tan Szu Hian' }
+                                    ],
+                                    value: options.model.JobTitleGroup || 'All Drivers'
+                                });
+                        }
                     },
                     {
-                        field: 'RateTypeId', title: 'Rate Type', width: 180,
+                        field: 'RateTypeId', title: 'Rate Type', width: 160,
                         template: '#: RateTypeDescription #',
                         editor: function(container, options) {
                             $('<input name="' + options.field + '"/>')
@@ -190,12 +208,12 @@
                         }
                     },
                     {
-                        field: 'RateValue', title: 'Rate Value', width: 120,
+                        field: 'RateValue', title: 'Rate Value', width: 85,
                         format: '{0:N2}',
                         attributes: { style: 'text-align:right;' }
                     },
                     {
-                        field: 'Currency', title: 'Currency', width: 100,
+                        field: 'Currency', title: 'Currency', width: 80,
                         editor: function(container, options) {
                             $('<input name="' + options.field + '"/>')
                                 .appendTo(container)
@@ -215,18 +233,31 @@
                         field: 'TripType', title: 'Trip Type', width: 120
                     },
                     {
-                        field: 'TerminalArea', title: 'Terminal Area', width: 130
+                        field: 'TerminalArea', title: 'Terminal Area', width: 120,
+                        editor: function(container, options) {
+                            $('<input name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoDropDownList({
+                                    dataTextField: 'text',
+                                    dataValueField: 'value',
+                                    dataSource: [
+                                        { text: 'TUAS', value: 'TUAS' },
+                                        { text: 'WITHIN PSA', value: 'WITHIN PSA' }
+                                    ],
+                                    value: options.model.TerminalArea || 'TUAS'
+                                });
+                        }
                     },
                     {
-                        field: 'TripThresholdMin', title: 'Trip Threshold (Min)', width: 140,
+                        field: 'TripThresholdMin', title: 'Trip Threshold (Min)', width: 135,
                         format: '{0:N0}',
                         attributes: { style: 'text-align:right;' }
                     },
                     {
-                        field: 'AssignmentType', title: 'Assignment Type', width: 130
+                        field: 'AssignmentType', title: 'Assignment Type', width: 120
                     },
                     {
-                        field: 'EffectiveDate', title: 'Effective Date', width: 130,
+                        field: 'EffectiveDate', title: 'Effective Date', width: 120,
                         format: '{0:dd-MMM-yyyy}',
                         editor: function(container, options) {
                             $('<input name="' + options.field + '"/>')
